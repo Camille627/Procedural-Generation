@@ -1,0 +1,22 @@
+# Ignorer les répertoires suivants et tout leur contenu
+/build/
+/obj/
+/Library/
+/ProjectSettings/
+/UserSettings/
+/[Aa]ssets/[Aa]sset[Ss]toreTools*
+
+
+# Ignorer tous les fichiers .meta dans tous les répertoires
+*.meta
+
+# Ignorer tous les fichiers .log
+*.log
+
+# Répertoire de données temporaires de Visual Studio
+.vs/ 
+
+# Fichiers de solution et de projet Visual Studio
+# Gardez ces fichiers pour permettre aux autres de collaborer
+!/*.sln
+!/*.csproj
