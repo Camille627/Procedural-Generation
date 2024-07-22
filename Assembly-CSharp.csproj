@@ -69,7 +69,6 @@
     <Compile Include="Assets\Scripts\Level\SommetArrete.cs" />
     <Compile Include="Assets\Scripts\General\CamBib.cs" />
     <Compile Include="Assets\Scripts\UI\OptionsManager.cs" />
-    <Compile Include="Assets\Scripts\Level\old\MapGenerator0.cs" />
     <Compile Include="Assets\Scripts\Entities\PlayerRenderer.cs" />
     <Compile Include="Assets\Scripts\Level\LevelManager.cs" />
     <Compile Include="Assets\Scripts\Entities\PlayerHealth.cs" />
@@ -82,7 +81,6 @@
     <Compile Include="Assets\Scripts\Entities\Health.cs" />
     <Compile Include="Assets\Scripts\Entities\oRifleController.cs" />
     <Compile Include="Assets\Scripts\Entities\oBullet.cs" />
-    <Compile Include="Assets\Scripts\Level\Sommet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Textures\Piskels\readme.txt" />

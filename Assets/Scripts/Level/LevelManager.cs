@@ -174,4 +174,3 @@ public class LevelManager : MonoBehaviour
         isPlaying = true;
     }
 }
-
