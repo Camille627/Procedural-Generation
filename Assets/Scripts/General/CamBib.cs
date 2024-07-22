@@ -889,54 +889,9 @@ namespace CamBib
                 return min;
             }
 
-            /// <summary>
-            /// Trouve les indices des cellules dans une matrice bidimensionnelle qui contiennent une valeur spécifique.
-            /// </summary>
-            /// <typeparam name="T">Le type des éléments dans la matrice. Doit implémenter <see cref="IEquatable{T}"/>.</typeparam>
-            /// <param name="matrice">La matrice bidimensionnelle dans laquelle on recherche la valeur.</param>
-            /// <param name="valeur">La valeur recherchée dans la matrice.</param>
-            /// <returns>Une liste de tuples représentant les indices (ligne, colonne) des cellules contenant la valeur recherchée.</returns>
-            /// <example>
-            /// Voici un exemple d'utilisation de la méthode <c>FindIndicesOfValue</c> :
-            ///
-            /// <code>
-            /// int[,] intMatrix = {
-            ///     { 1, 2, 3 },
-            ///     { 4, 5, 6 },
-            ///     { 7, 8, 9 }
-            /// };
-            ///
-            /// var indices = FindIndicesOfValue(intMatrix, 5);
-            /// foreach (var index in indices)
-            /// {
-            ///     Console.WriteLine($"({index.Item1}, {index.Item2})"); // Output: (1, 1)
-            /// }
-            /// </code>
-            /// </example>
-            public static List<PaireInt> Indices<T>(T[,] matrice, T valeur) where T : IEquatable<T>
-            {
-                if (matrice == null)
-                {
-                    throw new ArgumentException("La matrice ne doit pas être nulle.");
-                }
-
-                List<PaireInt> indices = new List<PaireInt>();
-
-                for (int i = 0; i < matrice.GetLength(0); i++)
-                {
-                    for (int j = 0; j < matrice.GetLength(1); j++)
-                    {
-                        if (matrice[i, j].Equals(valeur))
-                        {
-                            indices.Add(new PaireInt(i, j));
-                        }
-                    }
-                }
-
-                return indices;
-            }
-            public static List<PaireInt> IndicesMax<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return Indices(matrice, Max(matrice));}
-            public static List<PaireInt> IndicesMin<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return Indices(matrice, Min(matrice)); }
+            
+            public static List<PaireInt> IndicesMax<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Max(matrice));}
+            public static List<PaireInt> IndicesMin<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Min(matrice)); }
         }
 
         /// <summary>
@@ -1566,6 +1521,52 @@ namespace CamBib
                 return matriceJagged;
             }
 
+            /// <summary>
+            /// Trouve les indices des cellules dans une matrice bidimensionnelle qui contiennent une valeur spécifique.
+            /// </summary>
+            /// <typeparam name="T">Le type des éléments dans la matrice. Doit implémenter <see cref="IEquatable{T}"/>.</typeparam>
+            /// <param name="matrice">La matrice bidimensionnelle dans laquelle on recherche la valeur.</param>
+            /// <param name="valeur">La valeur recherchée dans la matrice.</param>
+            /// <returns>Une liste de tuples représentant les indices (ligne, colonne) des cellules contenant la valeur recherchée.</returns>
+            /// <example>
+            /// Voici un exemple d'utilisation de la méthode <c>FindIndicesOfValue</c> :
+            ///
+            /// <code>
+            /// int[,] intMatrix = {
+            ///     { 1, 2, 3 },
+            ///     { 4, 5, 6 },
+            ///     { 7, 8, 9 }
+            /// };
+            ///
+            /// var indices = FindIndicesOfValue(intMatrix, 5);
+            /// foreach (var index in indices)
+            /// {
+            ///     Console.WriteLine($"({index.Item1}, {index.Item2})"); // Output: (1, 1)
+            /// }
+            /// </code>
+            /// </example>
+            public static List<PaireInt> Indices<T>(T[,] matrice, T valeur) where T : IEquatable<T>
+            {
+                if (matrice == null)
+                {
+                    throw new ArgumentException("La matrice ne doit pas être nulle.");
+                }
+
+                List<PaireInt> indices = new List<PaireInt>();
+
+                for (int i = 0; i < matrice.GetLength(0); i++)
+                {
+                    for (int j = 0; j < matrice.GetLength(1); j++)
+                    {
+                        if (matrice[i, j].Equals(valeur))
+                        {
+                            indices.Add(new PaireInt(i, j));
+                        }
+                    }
+                }
+
+                return indices;
+            }
         }
 
         /// <summary>

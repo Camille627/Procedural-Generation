@@ -359,7 +359,7 @@ namespace SommetArrete
         public static void LayerSommet(Graphe<DataSommetStandard, DataArreteStandard> graphe, DataSommetStandard donnee)
         {
             Random random = new Random(donnee.Seed());
-
+            
             //// Matrice de remplissabilité (donnant une valeur à chaque case du blueprint pour savoir si on peut le remplir)
             
             // Récupérations des tracés des arretes voisines
@@ -388,10 +388,10 @@ namespace SommetArrete
 
                 entrees[indexChemin] = new Paire<int>(x,y); //Ajt la position trouvée
             }
-
+            
             // Calcul de la matrice de remplissabilité
             Blueprint remplissabilite = new Blueprint(donnee.Blueprints()[0]);
-            int valeureInobstruable = 0; // definit les cases sur lesquelles le joueur doit pouvoir passer
+            int valeureInobstruable = int.MinValue; // definit les cases sur lesquelles le joueur doit pouvoir passer
 
             Paire<double> centroid;
             if (entrees.Length == 1)
@@ -429,32 +429,32 @@ namespace SommetArrete
             }
 
             Debug.Log("remplissabilite: " + remplissabilite);
-
+            
             //// Macrice d'agencement (elle décrit la manière dont est agencée la salle)
             
             Blueprint agencement = new Blueprint(donnee.Blueprints()[0]);
-
+            
             // Ajout des obstacles (valeur d'identification : 1)
             int max = NumUtils.Max(remplissabilite.Matrice());
+            
             if(max > 0)
             {
-                List<PaireInt> positionsLibres = NumUtils.Indices(remplissabilite.Matrice(), max);
-                int nombreObstacles = random.Next(positionsLibres.Count/5); // environ 1 pour 5 espaces libres
+                
+                List<PaireInt> positionsLibres = MatriceUtils.Indices(remplissabilite.Matrice(), max);
+                int nombreObstacles = random.Next((positionsLibres.Count/2)+1); // environ 1 pour 2 espaces libres
+                
                 for (int i = 0; i < nombreObstacles; i++)
                 {
                     PaireInt position = positionsLibres[random.Next(positionsLibres.Count)];
-                    agencement[position] = 1;
+                    agencement[PaireInt.Somme(agencement.Position(),position)] = 1;
                 }
             }
-
-
 
             // Remplissage des cases de valeur moyenne avec "caisses"
             // Remplissage du chemin avec des "ennemis"
 
-
             Debug.Log("agencement: " + agencement);
-
+            
             return;
         }
 
@@ -492,7 +492,7 @@ namespace SommetArrete
 
 
 
-            return blueprints;
+                return blueprints;
         }
 
         /// <summary>

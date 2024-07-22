@@ -134,7 +134,7 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     public void SetLevel()
     {
-        Debug.Log(" Generating level...");
+        Debug.Log("Generating level...");
 
         // Génération de la direction moyenne
         DirectionPrecedente generatrice = new DirectionPrecedente(random.Next());
@@ -172,5 +172,7 @@ public class LevelManager : MonoBehaviour
 
         // On lance le jeu
         isPlaying = true;
+
+        Debug.Log("Level Completed...");
     }
 }
