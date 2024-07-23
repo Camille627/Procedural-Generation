@@ -6,6 +6,7 @@ using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using CamBib.Fonctions;
 using CamBib.Class;
 
 namespace CamBibUnity
@@ -195,7 +196,8 @@ namespace CamBibUnity
     /// <typeparam name="TClef"></typeparam>
     /// <typeparam name="TValeur"></typeparam>
     [Serializable]
-    public class MaDict<TClef, TValeur>
+    public class MaDict<TClef, TValeur> 
+        where TClef : IEquatable<TClef>
     {
         // Classe paire clef-valeur
         [Serializable]
@@ -227,8 +229,27 @@ namespace CamBibUnity
             public TClef Clef() { return clef; }
             public TValeur Valeur() { return valeur; }
 
+            // Set
+            public void SetClef(TClef clef) { this.clef = clef; }
+            public void SetValeur(TValeur valeur) { this.valeur = valeur; }
+
             // ToString
-            public override string ToString() { return clef.ToString() + ":" + valeur.ToString(); }
+            public override string ToString()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append($"association: {{{this.clef}, ");
+
+                if (valeur != null)
+                {
+                    sb.AppendLine($"{this.valeur}}}");
+                }
+                else
+                {
+                    sb.AppendLine(" null}");
+                }
+
+                return sb.ToString();
+            }
         }
 
         [SerializeField]
@@ -250,7 +271,7 @@ namespace CamBibUnity
 
         // get
         public int Length() { return objets.Length; }
-        public TValeur Valeur(TClef clef)
+        public TValeur Valeur(TClef clef) // Retourne la première occurence
         {
             foreach (MaDictObjet objet in objets)
             {
@@ -271,6 +292,26 @@ namespace CamBibUnity
             return valeurs;
         }
 
+        // Set
+        /// <summary>
+        /// Set la valeur associée à une clef.
+        /// Attention, cela ne set que la première valeur
+        /// </summary>
+        /// <param name="clef">La clef recherchée</param>
+        /// <param name="valeur">La nouvelle valeur à associer à cette clef</param>
+        public void SetValeur(TClef clef, TValeur valeur)
+        {
+            foreach (MaDictObjet objet in objets)
+            {
+                if (clef.Equals(objet.Clef()))
+                {
+                    objet.SetValeur(valeur);
+                    return;
+                }
+            }
+            return;
+        }
+
         // ToString
         public override string ToString()
         {
@@ -284,20 +325,63 @@ namespace CamBibUnity
             return builder.ToString();
         }
 
-        // Add
-        public void Add(MaDictObjet objet)
+        public void Ajoute(MaDictObjet objet)
         {
             MaDictObjet[] nouveauxObjets = new MaDictObjet[objets.Length + 1];
             for (int i = 0; i < objets.Length; i++) { nouveauxObjets[i] = objets[i]; }
             nouveauxObjets[^1] = objet;
             objets = nouveauxObjets;
         }
-        public void Add(TClef clef, TValeur valeur)
+        public void Ajoute(TClef clef, TValeur valeur)
         {
             MaDictObjet[] nouveauxObjets = new MaDictObjet[objets.Length + 1];
             for (int i = 0; i < objets.Length; i++) { nouveauxObjets[i] = objets[i]; }
             nouveauxObjets[^1] = new MaDictObjet(clef, valeur);
             objets = nouveauxObjets;
+        }
+
+        /// <summary>
+        /// Retire une paire clef/valeur.
+        /// Attention, cela n'impacte que la première occurence
+        /// </summary>
+        /// <param name="clef">la clef de l'association clef/valeur que l'on veut retirer du dictionnaire</param>
+        public void Retire(TClef clef)
+        {
+            int index = 0;
+            while (index < objets.Length && !objets[index].Clef().Equals(clef)) { index++; }
+            if (index < objets.Length)
+            {
+                objets = objets.Retire(index);
+            }
+            throw new ArgumentException("Aucune association du dictionnaire n'a cette clef","clef");
+        }
+
+        public int RetireTous(TClef clef)
+        {
+            List<int> indices = new List<int>();
+            for (int i = 0; i < objets.Length; i++) { if (objets[i].Clef().Equals(clef)) { indices.Add(i); } }
+            objets = objets.Retire(indices.ToArray());
+            return indices.Count;
+        }
+        
+        /// <summary>
+        /// Récupérer une valeur correspondant à une clef en retirant son association du dictionnaire
+        /// Cela prend en compte la première occurence rencontrée
+        /// </summary>
+        /// <param name="clef">La clef de l'association recherchée</param>
+        /// <returns>La valeur retirée du dictionnaire</returns>
+        public TValeur Pop(TClef clef)
+        {
+            TValeur association = Valeur(clef);
+            Retire(clef);
+            return association;
+        }
+
+        public int Compte(TClef clef)
+        {
+            int compte = 0;
+            for (int i = 0; i < objets.Length; i++) { if (objets[i].Equals(clef)) { compte++; } }
+            return compte;
         }
 
         // MaDict to Dictionnary

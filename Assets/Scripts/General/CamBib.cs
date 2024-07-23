@@ -827,7 +827,7 @@ namespace CamBib
             /// Console.WriteLine("Max value in stringMatrix: " + Max(stringMatrix)); // Output: orange
             /// </code>
             /// </example>
-            public static T Max<T>(T[,] matrice) where T : IComparable<T>
+            public static T Max<T>(this T[,] matrice) where T : IComparable<T>
             {
                 if (matrice == null || matrice.Length == 0)
                 {
@@ -871,7 +871,7 @@ namespace CamBib
             /// Console.WriteLine("Min value in stringMatrix: " + Min(stringMatrix)); // Output: apple
             /// </code>
             /// </example>
-            public static T Min<T>(T[,] matrice) where T : IComparable<T>
+            public static T Min<T>(this T[,] matrice) where T : IComparable<T>
             {
                 if (matrice == null || matrice.Length == 0)
                 {
@@ -889,9 +889,21 @@ namespace CamBib
                 return min;
             }
 
-            
-            public static List<PaireInt> IndicesMax<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Max(matrice));}
-            public static List<PaireInt> IndicesMin<T>(T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Min(matrice)); }
+            /// <summary>
+            /// Donne les indices des cellules contenant la valeur maximale de la matrice
+            /// </summary>
+            /// <typeparam name="T">Le type des éléments dans la matrice. Doit implémenter <see cref="IComparable{T}"/>.</typeparam>
+            /// <param name="matrice">La matrice</param>
+            /// <returns>Liste d'est paires (ligne, colonne) des indices des cellules contenant la valeur maximale de la matrice</returns>
+            public static List<Paire<int>> IndicesMax<T>(this T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Max(matrice));}
+
+            /// <summary>
+            /// Donne les indices des cellules contenant la valeur minimale de la matrice
+            /// </summary>
+            /// <typeparam name="T">Le type des éléments dans la matrice. Doit implémenter <see cref="IComparable{T}"/>.</typeparam>
+            /// <param name="matrice">La matrice</param>
+            /// <returns>Liste d'est paires (ligne, colonne) des indices des cellules contenant la valeur minimale de la matrice</returns>
+            public static List<Paire<int>> IndicesMin<T>(this T[,] matrice) where T : IComparable<T>, IEquatable<T> { return MatriceUtils.Indices(matrice, Min(matrice)); }
         }
 
         /// <summary>
@@ -1191,6 +1203,49 @@ namespace CamBib
         public static class TableauUtils
         {
             /// <summary>
+            /// Représente un tableau par un texte.
+            /// </summary>
+            /// <typeparam name="T">Le type de données du tableau</typeparam>
+            /// <param name="matrice">Le tableau</param>
+            /// <returns>String[] représentant le tableau</returns>
+            public static string MaToString<T>(this T[] tableau)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"Array {typeof(T)} - length: {tableau.Length}");
+
+                if (tableau != null)
+                {
+                    sb.AppendLine("{");
+
+                    for (int i = 0; i < tableau.Length - 1; i++)
+                    {
+                        sb.AppendLine(tableau[i] + ", ");
+                    }
+                    sb.AppendLine(tableau[^1] + "}");
+                }
+                else
+                {
+                    sb.AppendLine("Array: null");
+                }
+
+                return sb.ToString();
+            }
+
+            /// <summary>
+            /// Vérifie si une donnée appartient à un tableau
+            /// </summary>
+            /// <typeparam name="T">Le type de donnée avec lequel on travaille</typeparam>
+            /// <param name="tableau">Le tableau de données dans lequel on va chercher</param>
+            /// <param name="donnee">La donnée recherchée</param>
+            /// <returns>true si la donnée est trouvée dans le tableau, false sinon</returns>
+            public static bool Contient<T>(this T[] tableau, T valeur)
+            {
+                int i = 0;
+                while (i < tableau.Length && !tableau[i].Equals(valeur)) { i++; }
+                return i != tableau.Length && tableau[i].Equals(valeur);
+            }
+
+            /// <summary>
             /// Renvoie l'élément du tableau à l'index spécifié, en utilisant un index modulo la longueur du tableau.
             /// </summary>
             /// <typeparam name="T">Le type des éléments du tableau.</typeparam>
@@ -1198,23 +1253,80 @@ namespace CamBib
             /// <param name="index">L'index de l'élément à récupérer. Si l'index est hors des limites du tableau, il est modulo avec la longueur du tableau.</param>
             /// <returns>L'élément du tableau à l'index spécifié.</returns>
             /// <exception cref="ArgumentNullException">Si le tableau est null.</exception>
-            public static T Valeur<T>(T[] tableau, int index)
+            public static T Valeur<T>(this T[] tableau, int index)
             {
                 while (index < 0) { index += tableau.Length; }
                 return tableau[index % tableau.Length];
             }
 
             /// <summary>
-            /// Renvoie un sous-tableau contenant les éléments du tableau original compris entre les indices spécifiés,
-            /// en utilisant des indices modulo la longueur du tableau.
+            /// Copier un tableau en enlevant un élément
             /// </summary>
-            /// <typeparam name="T">Le type des éléments du tableau.</typeparam>
-            /// <param name="tableau">Le tableau à partir duquel créer le sous-tableau.</param>
-            /// <param name="indexPremier">L'index de début (inclus) du sous-tableau. Si l'index dépasse la longueur du tableau, il est modulo avec la longueur du tableau.</param>
-            /// <param name="indexLimite">L'index de fin (exclus) du sous-tableau. Si l'index dépasse la longueur du tableau, il est modulo avec la longueur du tableau.</param>
-            /// <returns>Un sous-tableau contenant les éléments du tableau original compris entre les indices spécifiés.</returns>
-            /// <exception cref="ArgumentNullException">Si le tableau est null.</exception>
-            public static T[] SousTableau<T>(T[] tableau, int indexPremier, int indexLimite)
+            /// <typeparam name="T">Le type de données du tableau</typeparam>
+            /// <param name="tableau">Le tableau </param>
+            /// <param name="index">L'index de l'élément à retirer du tableau</param>
+            /// <returns>Un tableau contenant les mêmes éléments mais sans celui que l'on à retiré</returns>
+            public static T[] Retire<T>(this T[] tableau, int index)
+            {
+                while (index < 0) { index += tableau.Length; }
+                index = index % tableau.Length;
+
+                return tableau.SousTableau(0, index).Concatene(tableau.SousTableau(index + 1, tableau.Length));
+            }
+            /// <summary>
+            /// Copie un tableau en enlevant une valeur. Attention, il enlève la première occurence de cette valeur
+            /// </summary>
+            /// <typeparam name="T">Le type de données du tableau</typeparam>
+            /// <param name="tableau">Le tableau </param>
+            /// <param name="valeur">La valeur à retirer du tableau</param>
+            /// <returns>Un tableau contenant les mêmes éléments mais sans celui que l'on à retiré</returns>
+            public static T[] Retire<T>(this T[] tableau, T valeur)
+            {
+                int index = 0;
+                while (index < tableau.Length && !tableau[index].Equals(valeur)) { index++; }
+                if (index < tableau.Length)
+                {
+                    return tableau.Retire(index);
+                }
+                throw new Exception("La valeur n'est pas dans le tableau");
+            }
+            public static T[] Retire<T>(this T[] tableau, int[] indices)
+            {
+                // Tri des indices pour optimisation (facultatif)
+                Array.Sort(indices);
+
+                // Créez un nouveau tableau pour contenir les éléments restants
+                T[] nouvTableau = new T[tableau.Length - indices.Length];
+                int j = 0;
+                int indicesIndex = 0;
+
+                for (int i = 0; i < tableau.Length; i++)
+                {
+                    // Si l'indice actuel n'est pas dans la liste des indices à retirer
+                    if (indicesIndex < indices.Length && i == indices[indicesIndex])
+                    {
+                        indicesIndex++;
+                    }
+                    else
+                    {
+                        nouvTableau[j] = tableau[i];
+                        j++;
+                    }
+                }
+                return nouvTableau;
+            }
+
+            /// <summary>
+        /// Renvoie un sous-tableau contenant les éléments du tableau original compris entre les indices spécifiés,
+        /// en utilisant des indices modulo la longueur du tableau.
+        /// </summary>
+        /// <typeparam name="T">Le type des éléments du tableau.</typeparam>
+        /// <param name="tableau">Le tableau à partir duquel créer le sous-tableau.</param>
+        /// <param name="indexPremier">L'index de début (inclus) du sous-tableau. Si l'index dépasse la longueur du tableau, il est modulo avec la longueur du tableau.</param>
+        /// <param name="indexLimite">L'index de fin (exclus) du sous-tableau. Si l'index dépasse la longueur du tableau, il est modulo avec la longueur du tableau.</param>
+        /// <returns>Un sous-tableau contenant les éléments du tableau original compris entre les indices spécifiés.</returns>
+        /// <exception cref="ArgumentNullException">Si le tableau est null.</exception>
+            public static T[] SousTableau<T>(this T[] tableau, int indexPremier, int indexLimite)
             {
 
                 T[] sousTableau = new T[indexLimite - indexPremier];
@@ -1224,6 +1336,17 @@ namespace CamBib
                 }
                 return sousTableau;
             }
+            
+            public static T[] Redimensionne<T>(T[] tableau, int taille)
+            {
+                T[] nouveau = new T[taille];
+                int i = 0;
+                while (i < tableau.Length && i < taille)
+                {
+                    nouveau[i] = tableau[i];
+                }
+                return tableau;
+            }
 
             /// <summary>
             /// Concatène deux tableaux en un seul tableau.
@@ -1232,7 +1355,7 @@ namespace CamBib
             /// <param name="tableau1">Le premier tableau à concaténer.</param>
             /// <param name="tableau2">Le deuxième tableau à concaténer.</param>
             /// <returns>Le tableau résultant contenant les éléments des deux tableaux d'entrée.</returns>
-            public static T[] Concatene<T>(T[] tableau1, T[] tableau2)
+            public static T[] Concatene<T>(this T[] tableau1, T[] tableau2)
             {
                 // Calculer la longueur totale du tableau résultant
                 int nouvelleLongueur = tableau1.Length + tableau2.Length;
@@ -1272,64 +1395,6 @@ namespace CamBib
                 return nouveauTableau;
             }
 
-            /// <summary>
-            /// Représente un tableau par un texte.
-            /// </summary>
-            /// <typeparam name="T">Le type de données du tableau</typeparam>
-            /// <param name="matrice">Le tableau</param>
-            /// <returns>String[] représentant le tableau</returns>
-            public static string MaToString<T>(T[] tableau)
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine($"Array {typeof(T)} - length: {tableau.Length}");
-
-                if (tableau != null)
-                {
-                    sb.AppendLine("{");
-
-                    for (int i = 0; i < tableau.Length - 1; i++)
-                    {
-                        sb.AppendLine(tableau[i] + ", ");
-                    }
-                    sb.AppendLine(tableau[^1] + "}");
-                }
-                else
-                {
-                    sb.AppendLine("Array: null");
-                }
-
-                return sb.ToString();
-            }
-
-            /// <summary>
-            /// Vérifie si une donnée appartient à un tableau
-            /// </summary>
-            /// <typeparam name="T">Le type de donnée avec lequel on travaille</typeparam>
-            /// <param name="tableau">Le tableau de données dans lequel on va chercher</param>
-            /// <param name="donnee">La donnée recherchée</param>
-            /// <returns>true si la donnée est trouvée dans le tableau, false sinon</returns>
-            public static bool Contient<T>(T[] tableau, T donnee)
-            {
-                foreach (T element in tableau)
-                {
-                    if (EqualityComparer<T>.Default.Equals(element, donnee))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            public static T[] Redimensionne<T>(T[] tableau, int taille)
-            {
-                T[] nouveau = new T[taille];
-                int i = 0;
-                while ( i < tableau.Length && i < taille)
-                {
-                    nouveau[i] = tableau[i];
-                }
-                return tableau;
-            }
         }
 
         /// <summary>
@@ -1545,14 +1610,14 @@ namespace CamBib
             /// }
             /// </code>
             /// </example>
-            public static List<PaireInt> Indices<T>(T[,] matrice, T valeur) where T : IEquatable<T>
+            public static List<Paire<int>> Indices<T>(this T[,] matrice, T valeur) where T : IEquatable<T>
             {
                 if (matrice == null)
                 {
                     throw new ArgumentException("La matrice ne doit pas être nulle.");
                 }
 
-                List<PaireInt> indices = new List<PaireInt>();
+                List<Paire<int>> indices = new List<Paire<int>>();
 
                 for (int i = 0; i < matrice.GetLength(0); i++)
                 {
@@ -1560,12 +1625,50 @@ namespace CamBib
                     {
                         if (matrice[i, j].Equals(valeur))
                         {
-                            indices.Add(new PaireInt(i, j));
+                            indices.Add(new Paire<int>(i, j));
                         }
                     }
                 }
 
                 return indices;
+            }
+
+            /// <summary>
+            /// Récupérer les différentes valeurs contenues dans une matrice
+            /// </summary>
+            /// <typeparam name="T">le type de données contenu dans la matrice</typeparam>
+            /// <param name="matrice">la matrice</param>
+            /// <returns>un tableau contenant une fois chaque valeur différente apparaissant dans la matrice</returns>
+            public static T[] Valeurs<T>(this T[,] matrice)
+            {
+                List<T> valeurs = new List<T>();
+                foreach (T element in matrice)
+                {
+                    if (!valeurs.Contains(element))
+                    {
+                        valeurs.Add(element);
+                    }
+                }
+                return valeurs.ToArray();
+            }
+            
+            /// <summary>
+            /// Indique si une matrice contient une valeur où non
+            /// </summary>
+            /// <typeparam name="T">Le type de données de la matrice</typeparam>
+            /// <param name="matrice">La matrice</param>
+            /// <param name="valeur">La valeur recherchée dans la matrice</param>
+            /// <returns>true si la valeur recherchée est dans la matrice, false sinon</returns>
+            public static bool Contient<T>(this T[,] matrice, T valeur) where T : IEquatable<T>
+            {
+                foreach (T element in matrice)
+                {
+                    if (valeur.Equals(element))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
 
@@ -1713,7 +1816,7 @@ namespace CamBib
         /// Classe générique permettant de manipuler des paires de valeurs.
         /// </summary>
         /// <typeparam name="DataType">Le type de données des valeurs de la paire.</typeparam>
-        public class Paire<DataType>
+        public class Paire<DataType> : IEquatable<Paire<DataType>>
             where DataType : struct // Limite DataType aux types de valeur
         {
             // Variables
@@ -1830,7 +1933,7 @@ namespace CamBib
 
             public static implicit operator PaireInt(Paire<DataType> paire)
             {
-                if (Fonctions.NumUtils.IsNumerique<DataType>())
+                if (NumUtils.IsNumerique<DataType>())
                 {
                     int value1 = Convert.ToInt32(paire[0]);
                     int value2 = Convert.ToInt32(paire[1]);
@@ -1842,8 +1945,8 @@ namespace CamBib
                 }
             }
 
-
-            
+            //// Bool
+            public bool Equals(Paire<DataType> paire) { return this[0].Equals(paire[0]) && this[1].Equals(paire[1]); }
 
             //// Autres Méthodes
 
@@ -1856,7 +1959,7 @@ namespace CamBib
             /// <exception cref="ArgumentException">Le type de données de la paire n'est pas int, float, double ou decimal.</exception>
             public double NormEucli()
             {
-                if (!Fonctions.NumUtils.IsNumerique<DataType>())
+                if (!NumUtils.IsNumerique<DataType>())
                 {
                     throw new ArgumentException("Le type doit être int, float double ou decimal", "paire");
                 }
@@ -2827,7 +2930,7 @@ namespace CamBib
             // Variables
             private int width;
             private int height;
-            private int[,] matrix;
+            private int[,] matrice;
             private PaireInt position; // Position de la valeur [0,0] du blueprint par rapport à l'origine du reprère
 
             // Constructeurs
@@ -2835,7 +2938,7 @@ namespace CamBib
             {
                 width = 0;
                 height = 0;
-                matrix = null;
+                matrice = null;
                 position = new PaireInt(0, 0);
             }
 
@@ -2847,11 +2950,11 @@ namespace CamBib
             {
                 width = model.width;
                 height = model.height;
-                matrix = MatriceUtils.CopieProfonde(model.matrix);
+                matrice = MatriceUtils.CopieProfonde(model.matrice);
                 position = new PaireInt(model.position);
             }
 
-            public Blueprint(int[,] matrix, PaireInt position = null)
+            public Blueprint(int[,] matrice, PaireInt position = null)
             {
                 // Origine
                 if (position == null)
@@ -2859,9 +2962,9 @@ namespace CamBib
                     position = new PaireInt(0, 0);
                 }
 
-                width = matrix.GetLength(0);
-                height = matrix.GetLength(1);
-                this.matrix = matrix;
+                width = matrice.GetLength(0);
+                height = matrice.GetLength(1);
+                this.matrice = matrice;
                 this.position = position;
             }
 
@@ -2907,14 +3010,14 @@ namespace CamBib
 
                 this.width = width;
                 this.height = height;
-                matrix = matrice;
+                this.matrice = matrice;
                 this.position = position;
             }
 
             // Getters
             public int Width() { return width; }
             public int Height() { return height; }
-            public int[,] Matrice() { return matrix; }
+            public int[,] Matrice() { return matrice; }
             public int Valeur(int x, int y) { return this[x, y]; }
             public PaireInt Position() { return position; }
 
@@ -2932,7 +3035,7 @@ namespace CamBib
                 {
                     if (IsValidPosition(x, y))
                     {
-                        return matrix[x - position.X(), y - position.Y()];
+                        return matrice[x - position.X(), y - position.Y()];
                     }
                     else
                     {
@@ -2943,7 +3046,7 @@ namespace CamBib
                 {
                     if (IsValidPosition(x, y))
                     {
-                        matrix[x - position.X(), y - position.Y()] = value;
+                        matrice[x - position.X(), y - position.Y()] = value;
                     }
                     else
                     {
@@ -2964,7 +3067,7 @@ namespace CamBib
                     int x = position.X(), y = position.Y();
                     if (IsValidPosition(x, y))
                     {
-                        return matrix[x - this.position.X(), y - this.position.Y()];
+                        return matrice[x - this.position.X(), y - this.position.Y()];
                     }
                     else
                     {
@@ -2976,7 +3079,7 @@ namespace CamBib
                     int x = position.X(), y = position.Y();
                     if (IsValidPosition(x, y))
                     {
-                        matrix[x - this.position.X(), y - this.position.Y()] = value;
+                        matrice[x - this.position.X(), y - this.position.Y()] = value;
                     }
                     else
                     {
@@ -2990,12 +3093,12 @@ namespace CamBib
             {
                 width = model.width;
                 height = model.height;
-                matrix = model.matrix;
+                matrice = model.matrice;
                 position = model.position;
             }
             public void SetMatrix(int[,] matrix)
             {
-                this.matrix = matrix;
+                this.matrice = matrix;
                 width = matrix.GetLength(0);
                 height = matrix.GetLength(1);
             }
@@ -3008,15 +3111,15 @@ namespace CamBib
             public override string ToString()
             {
                 // Erreurs
-                if (width != matrix.GetLength(0)) { throw new Exception("La largeur de la matrice 'GetLength(0)' n'est pas corrélée à la largeur 'width' du Blueprint"); }
-                if (height != matrix.GetLength(1)) { throw new Exception("La hauteur de la matrice 'GetLength(1)' n'est pas corrélée à la hauteur 'height' du Blueprint"); }
+                if (width != matrice.GetLength(0)) { throw new Exception("La largeur de la matrice 'GetLength(0)' n'est pas corrélée à la largeur 'width' du Blueprint"); }
+                if (height != matrice.GetLength(1)) { throw new Exception("La hauteur de la matrice 'GetLength(1)' n'est pas corrélée à la hauteur 'height' du Blueprint"); }
 
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Class Blueprint");
                 sb.AppendLine($"Width: {width}, Height: {height}");
                 sb.AppendLine($"Position x: {position.X()}, y: {position.Y()}");
 
-                if (matrix != null)
+                if (matrice != null)
                 {
                     sb.AppendLine("Matrix:");
 
@@ -3024,7 +3127,7 @@ namespace CamBib
                     {
                         for (int j = 0; j < height; j++)
                         {
-                            sb.Append(matrix[i, j] + "\t");
+                            sb.Append(matrice[i, j] + "\t");
                         }
                         sb.AppendLine();
                     }
@@ -3045,7 +3148,7 @@ namespace CamBib
             public bool IsEmpty()
             {
                 // Vérifie si la matrice est null
-                if (matrix == null)
+                if (matrice == null)
                 {
                     return true;
                 }
@@ -3061,7 +3164,7 @@ namespace CamBib
             public bool IsTransparent()
             {
                 // Vérifie que la matrice n'est pas null
-                if (matrix == null)
+                if (matrice == null)
                 {
                     throw new InvalidOperationException("La matrice est null. Impossible de déterminer si elle est transparente.");
                 }
@@ -3071,7 +3174,7 @@ namespace CamBib
                 {
                     for (int j = 0; j < height; j++)
                     {
-                        if (matrix[i, j] != -1)
+                        if (matrice[i, j] != -1)
                         {
                             return false; // Si une valeur différente de -1 est trouvée, la matrice n'est pas transparente
                         }
@@ -3092,7 +3195,52 @@ namespace CamBib
                        position.Y() <= y && y < position.Y() + height;
             }
 
-            //// Autres Methodes
+            //// applications à la Matrice
+
+            /// <summary>
+            /// Indique si la matrice du blueprint contient une valeur où non
+            /// </summary>
+            /// <typeparam name="T">Le type de données de la matrice</typeparam>
+            /// <param name="matrice">La matrice</param>
+            /// <param name="valeur">La valeur recherchée dans la matrice</param>
+            /// <returns>true si la valeur recherchée est dans la matrice, false sinon</returns>
+            public bool Contient(int valeur) { return matrice.Contient(valeur); }
+
+            /// <summary>
+            /// Trouve les indices des cellules de la matrice du blueprint qui contiennent une valeur spécifique.
+            /// </summary>
+            /// <param name="valeur">La valeur recherchée dans la matrice du blueprint.</param>
+            /// <returns>Une liste de tuples représentant les indices (ligne, colonne) des cellules contenant la valeur recherchée.</returns>
+            public List<Paire<int>> Indices(int valeur) { return matrice.Indices(valeur); }
+
+            /// <summary>
+            /// Trouve la valeur maximale dans la matrice du blueprint.
+            /// </summary>
+            /// <returns>L'élément maximal de la matrice.</returns>
+            /// <exception cref="ArgumentException">Lancé si la matrice est nulle ou vide.</exception> 
+            public int Max() { return matrice.Max(); }
+
+            /// <summary>
+            /// Trouve la valeur minimale dans une matrice du blueprint.
+            /// </summary>
+            /// <returns>L'élément minimal de la matrice du blueprint.</returns>
+            /// <exception cref="ArgumentException">Lancé si la matrice est nulle ou vide.</exception>
+            public int Min() { return matrice.Min(); }
+
+            /// <summary>
+            /// Donne les indices des cellules  de la matrice du blueprint contenant la valeur maximale
+            /// </summary>
+            /// <returns>Liste d'est paires (ligne, colonne) des indices des cellules contenant la valeur maximale de la matrice</returns>
+            public List<Paire<int>> IndicesMax() { return matrice.IndicesMax(); }
+
+            /// <summary>
+            /// Donne les indices des cellules  de la matrice du blueprint contenant la valeur minimale
+            /// </summary>
+            /// <returns>Liste d'est paires (ligne, colonne) des indices des cellules contenant la valeur minimale de la matrice</returns>
+            public List<Paire<int>> IndicesMin() { return matrice.IndicesMin(); }
+
+            //// applications au Dessin
+
             /// <summary>
             /// Fonction qui inverse le sens du blueprint en fonction d'un vecteur unitaire.
             /// Il faut peut être la mettre a jour
@@ -3108,7 +3256,7 @@ namespace CamBib
 
                 // Copie temporaire de la matrice
                 int[,] tempMatrix = new int[width, height];
-                Array.Copy(matrix, tempMatrix, matrix.Length);
+                Array.Copy(matrice, tempMatrix, matrice.Length);
 
                 // Inversion du sens en fonction du vecteur direction
                 if (direction[0] == -1) // Inversion horizontale
@@ -3117,7 +3265,7 @@ namespace CamBib
                     {
                         for (int j = 0; j < height; j++)
                         {
-                            matrix[width - 1 - i, j] = tempMatrix[i, j];
+                            matrice[width - 1 - i, j] = tempMatrix[i, j];
                         }
                     }
                 }
@@ -3127,7 +3275,7 @@ namespace CamBib
                     {
                         for (int j = 0; j < height; j++)
                         {
-                            matrix[i, height - 1 - j] = tempMatrix[i, j];
+                            matrice[i, height - 1 - j] = tempMatrix[i, j];
                         }
                     }
                 }
@@ -3164,7 +3312,7 @@ namespace CamBib
                 }
 
                 // Assignation des valeurs
-                matrix = resized.matrix;
+                matrice = resized.matrice;
                 height = newHeight;
                 width = newWidth;
                 position = resized.Position();
@@ -3188,7 +3336,7 @@ namespace CamBib
                 if (this.IsEmpty())
                 {
                     // initialise avec le blueprint à ajouter
-                    SetMatrix(blueprintToAdd.matrix);
+                    SetMatrix(blueprintToAdd.matrice);
                     if (position != null)
                     {
                         SetPosition(PaireInt.Somme(blueprintToAdd.Position(), position));
@@ -3413,7 +3561,7 @@ namespace CamBib
                 }
 
                 // Remplissage de la bordure
-                int[,] boxMatrix = box.matrix;
+                int[,] boxMatrix = box.matrice;
                 for (int i = 0; i < box.Width(); i++)
                 {
                     for (int j = 0; j < box.Height(); j++)

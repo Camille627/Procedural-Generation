@@ -21,7 +21,7 @@ namespace SommetArrete
         // Variables
         private int seed;
         private PaireInt position;
-        private MaDict<string, PaireInt> contenu; // {"GameObject","Position"}
+        private MaDict<string, Paire<int>> contenu; // {"GameObject","Position"}
         private int taille;
         private List<Blueprint> blueprints;
 
@@ -30,7 +30,7 @@ namespace SommetArrete
         {
             seed = 0;
             position = new PaireInt();
-            contenu = new MaDict<string, PaireInt>();
+            contenu = new MaDict<string, Paire<int>>();
             taille = -1;
             blueprints = null;
         }
@@ -38,7 +38,7 @@ namespace SommetArrete
         {
             seed = model.seed;
             position = new PaireInt(model.position);
-            contenu = new MaDict<string, PaireInt>(model.contenu);
+            contenu = new MaDict<string, Paire<int>>(model.contenu);
             taille = model.taille;
             // Copie profonde pour blueprints
             if (model.blueprints != null)
@@ -50,7 +50,7 @@ namespace SommetArrete
             } else { blueprints = null; }
             
         }
-        public DataSommetStandard(int seed, PaireInt position, MaDict<string, PaireInt> contenu, int taille)
+        public DataSommetStandard(int seed, PaireInt position, MaDict<string, Paire<int>> contenu, int taille)
         {
             this.seed = seed;
             this.position = position;
@@ -62,15 +62,15 @@ namespace SommetArrete
         // Get
         public int Seed() { return seed; }
         public PaireInt Position() { return position; }
-        public MaDict<string, PaireInt> Contenu() { return contenu; }
+        public MaDict<string, Paire<int>> Contenu() { return contenu; }
         public int Taille() { return taille; }
         public List<Blueprint> Blueprints() { return blueprints; }
 
         // Set
         public void SetSeed(int valeur) { seed = valeur; }
         public void SetPosition(PaireInt paire) { position = paire; }
-        public void SetContenu(MaDict<string, PaireInt> valeurs) { contenu = valeurs; }
-        public void AddObjet(string tag, PaireInt position) { contenu.Add(tag, position); }
+        public void SetContenu(MaDict<string, Paire<int>> valeurs) { contenu = valeurs; }
+        public void AddObjet(string tag, PaireInt position) { contenu.Ajoute(tag, position); }
         public void SetTaille(int value) { taille = value; }
         public void SetBlueprints(List<Blueprint> valeurs) { blueprints = valeurs; }
 
@@ -212,8 +212,8 @@ namespace SommetArrete
 
             // Sommet initial
             PaireInt position = new PaireInt(0,0);
-            MaDict<string, PaireInt> contenu = new MaDict<string, PaireInt>();
-            contenu.Add("Player", position);
+            MaDict<string, Paire<int>> contenu = new MaDict<string, Paire<int>>();
+            contenu.Ajoute("Player", position);
             int taille = tailleSommet.Observation();
             DataSommetStandard donneeSommet = new DataSommetStandard(random.Next(), position, contenu, taille) ;
             donneeSommet.SetBlueprints(Utils.BlueprintSommet(donneeSommet));
@@ -233,8 +233,8 @@ namespace SommetArrete
                     graphe.DonneeSommet(i - 1).Position(),
                     new PaireInt(NumUtils.ArrondiEntier(dist * dir.X()), NumUtils.ArrondiEntier(dist * dir.Y())));
                 // cree les donnees
-                contenu = new MaDict<string, PaireInt>();
-                contenu.Add("Enemy", nextPosition);
+                contenu = new MaDict<string, Paire<int>>();
+                contenu.Ajoute("Enemy", null);
                 donneeSommet = new DataSommetStandard(seedSommet, nextPosition, contenu, tailleSommet.Observation());
                 donneeSommet.SetBlueprints(Utils.BlueprintSommet(donneeSommet));
 
@@ -391,7 +391,8 @@ namespace SommetArrete
             
             // Calcul de la matrice de remplissabilité
             Blueprint remplissabilite = new Blueprint(donnee.Blueprints()[0]);
-            int valeureInobstruable = int.MinValue; // definit les cases sur lesquelles le joueur doit pouvoir passer
+            int valeurInobstruable = int.MinValue; // definit les cases sur lesquelles le joueur doit pouvoir passer
+            int valeurPrefab = -2; // definit les cases sur lesquelles on place un prefab
 
             Paire<double> centroid;
             if (entrees.Length == 1)
@@ -405,7 +406,7 @@ namespace SommetArrete
                 for (int i = 0; i < entrees.Length; i++)
                 {
                     PaireInt dimensions = Paire<int>.Soustraction(entrees[i], centroid);
-                    Blueprint cheminInobstruable = Blueprint.Courbe(dimensions, new Blueprint(1, 1, valeureInobstruable));
+                    Blueprint cheminInobstruable = Blueprint.Courbe(dimensions, new Blueprint(1, 1, valeurInobstruable));
                     cheminInobstruable.SetPosition(PaireInt.Somme(cheminInobstruable.Position(), centroid));
                     remplissabilite.InsertToBlueprint(cheminInobstruable);
                 }
@@ -421,7 +422,7 @@ namespace SommetArrete
             {
                 for (int y = 0; y < remplissabilite.Height(); y++)
                 {
-                    if (remplissabilite[x0+x,y0+y] != valeureInobstruable && remplissabilite[x0 + x, y0 + y] != -1)
+                    if (remplissabilite[x0+x,y0+y] != valeurInobstruable && remplissabilite[x0 + x, y0 + y] != -1)
                     {
                         remplissabilite[x0 + x, y0 + y] = (int)Paire<double>.DistanceEuclidienne(centroid, new Paire<double>(x0 + x, y0 + y)); // Il faut créer une matrice de double pour stocker les doubles ou permetre cela dans les blueprints
                     }
@@ -433,26 +434,41 @@ namespace SommetArrete
             //// Macrice d'agencement (elle décrit la manière dont est agencée la salle)
             
             Blueprint agencement = new Blueprint(donnee.Blueprints()[0]);
-            
+            List<Paire<int>> positionsLibres;
+
             // Ajout des obstacles (valeur d'identification : 1)
             int max = NumUtils.Max(remplissabilite.Matrice());
             
             if(max > 0)
             {
                 
-                List<PaireInt> positionsLibres = MatriceUtils.Indices(remplissabilite.Matrice(), max);
+                positionsLibres = MatriceUtils.Indices(remplissabilite.Matrice(), max);
                 int nombreObstacles = random.Next((positionsLibres.Count/2)+1); // environ 1 pour 2 espaces libres
                 
                 for (int i = 0; i < nombreObstacles; i++)
                 {
-                    PaireInt position = positionsLibres[random.Next(positionsLibres.Count)];
-                    agencement[PaireInt.Somme(agencement.Position(),position)] = 1;
+                    int positionIndex = random.Next(positionsLibres.Count);
+                    agencement[PaireInt.Somme(agencement.Position(),positionsLibres[positionIndex])] = 1;
+                    positionsLibres.RemoveAt(positionIndex);
                 }
             }
 
             // Remplissage des cases de valeur moyenne avec "caisses"
+
             // Remplissage du chemin avec des "ennemis"
 
+            positionsLibres = remplissabilite.IndicesMin();
+            int nbEnnemis = donnee.Contenu().RetireTous("Enemy");
+            Debug.Log("nbEnnemis:" + nbEnnemis);
+            Debug.Log("contenu sans ennemis:" + donnee.Contenu());
+            for (int i = 0; i < nbEnnemis; i++)
+            {
+                Paire<int> position = Paire<int>.Somme(agencement.Position(), positionsLibres[random.Next(positionsLibres.Count)]);
+                Debug.Log("position:" + Paire<int>.Somme(position, donnee.Position()));
+                agencement[position] = valeurPrefab;
+                donnee.Contenu().Ajoute("Enemy", position);
+            }
+            Debug.Log("contenu :" + donnee.Contenu());
             Debug.Log("agencement: " + agencement);
             
             return;
@@ -521,18 +537,18 @@ namespace SommetArrete
             {
                 DataSommetStandard donnee = graphe.DonneeSommet(indexSommet);
                 // Ajout des GameObjects
-                foreach (string tag in donnee.Contenu().Clefs())
+                foreach (string clef in donnee.Contenu().Clefs())
                 { 
-                    PaireInt position = donnee.Contenu().Valeur(tag);
+                    Paire<int> position = donnee.Contenu().Valeur(clef);
 
-                    if (tag == "Player")
+                    if (clef == "Player")
                     {
                         GameObject player = GameObject.FindGameObjectWithTag("Player");
                         player.transform.position = new Vector3Int(position.X(), position.Y(), 0);
                         continue;
                     }
 
-                    GameObject gameObject = UnityEngine.Object.Instantiate(objets.Valeur(tag), new Vector3Int(position.X(), position.Y(), 0), Quaternion.identity);
+                    GameObject gameObject = UnityEngine.Object.Instantiate(objets.Valeur(clef), new Vector3Int(position.X(), position.Y(), 0), Quaternion.identity);
                 }
 
                 // Ajout aux tilemaps
