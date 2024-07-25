@@ -14,6 +14,7 @@ using Random = System.Random;
 public class LevelManager : MonoBehaviour
 {
     // Assets à instancier
+    [SerializeField] private Grid grid; // La grid utilisée pour le niveau.
     [SerializeField] private Tilemap[] tilemaps; // Tableau des Tilemaps utilisées pour le niveau.
     [SerializeField] private TileBase[] tiles; // Tableau des Tiles utilisées pour le niveau.
     [SerializeField] private MaDict<string, GameObject> gameObjects; // Les GameObjects utilisés pour le niveau
@@ -144,7 +145,7 @@ public class LevelManager : MonoBehaviour
         Graphe<DataSommetStandard, DataArreteStandard> trenchGraph = generatrice.GenerateGraphe();
 
         // Construction des Tilemaps à partir du graphe
-        Utils.GrapheToScene(tilemaps,tiles, gameObjects ,trenchGraph, seed);
+        Utils.GrapheToScene(grid, tilemaps,tiles, gameObjects ,trenchGraph, seed);
 
         // Joueur
         if (player != null)

@@ -130,6 +130,7 @@ namespace CamBibUnity
                 tilesToAdd.SetPosition(PaireInt.Soustraction(tilesToAdd.Position(), offset));
             }
         }
+        
         /// <summary>
         /// Insère des tiles dans plusieurs tilemaps en fonction des blueprints fournis.
         /// </summary>
@@ -176,6 +177,42 @@ namespace CamBibUnity
                 }
             }
 
+        }
+    }
+
+    public static class PrefabUtils
+    {
+        /// <summary>
+        /// Instancie des préfabs à des positions souhaitées.
+        /// </summary>
+        /// <param name="prefabs">Un tableau de tuples associant chacun une position au prefab que l'on souhaite instancier.</param>
+        /// <param name="grid">Si ce paramètre est renseigné, la grille est utilisée pour récupérer la bonne position.</param>
+        /// <returns>Un tableau contenant les références des objets instanciés (dans l'ordre du tableau de tuples).</returns>
+        public static GameObject[] InstanciePrefabs(Tuple<GameObject, Paire<int>>[] prefabs, Grid grid = null)
+        {
+            List<GameObject> objets = new List<GameObject>();
+
+            foreach (var element in prefabs)
+            {
+                Vector3 position;
+                if (grid != null)
+                {
+                    // Convertir la position de la cellule en position dans la scène en utilisant la grille
+                    position = grid.CellToWorld(new Vector3Int(element.Item2.X(), element.Item2.Y(), 0));
+                }
+                else
+                {
+                    // Utiliser directement la position en Vector3 si aucune grille n'est fournie
+                    position = new Vector3(element.Item2.X(), element.Item2.Y(), 0);
+                }
+
+                // Instancier le prefab à la position calculée avec une rotation par défaut
+                GameObject gameObject = UnityEngine.Object.Instantiate(element.Item1, position, Quaternion.identity);
+                objets.Add(gameObject);
+            }
+
+            // Retourner le tableau des objets instanciés
+            return objets.ToArray();
         }
     }
 

@@ -519,7 +519,7 @@ namespace SommetArrete
         /// <param name="objets">Les Prefabs des GameObjects à instanctier</param>
         /// <param name="graphe">Le graphe contenant les informations pour remplir la scène</param>
         /// <param name="randomSeed">La graine de Random à utiliser pour la génération</param>
-        public static void GrapheToScene(Tilemap[] tilemaps, TileBase[] tiles, MaDict<string, GameObject> objets, Graphe<DataSommetStandard, DataArreteStandard> graphe, int? randomSeed = null)
+        public static void GrapheToScene(Grid grid, Tilemap[] tilemaps, TileBase[] tiles, MaDict<string, GameObject> objets, Graphe<DataSommetStandard, DataArreteStandard> graphe, int? randomSeed = null)
         {
             if (!randomSeed.HasValue) { randomSeed = (int)DateTime.Now.Ticks; }
 
@@ -536,7 +536,9 @@ namespace SommetArrete
             for (int indexSommet = 0; indexSommet < graphe.Ordre(); indexSommet++)
             {
                 DataSommetStandard donnee = graphe.DonneeSommet(indexSommet);
-                // Ajout des GameObjects
+                // Ajout des prefabs
+                List<Tuple<GameObject, Paire<int>>> contenuConverti = new List<Tuple<GameObject, Paire<int>>>();
+
                 foreach (string clef in donnee.Contenu().Clefs())
                 { 
                     Paire<int> position = donnee.Contenu().Valeur(clef);
@@ -547,13 +549,18 @@ namespace SommetArrete
                         player.transform.position = new Vector3Int(position.X(), position.Y(), 0);
                         continue;
                     }
+                    else
+                    {
+                        var tuple = Tuple.Create(objets.Valeur(clef), position);
+                        contenuConverti.Add(tuple);
+                    }
 
-                    GameObject gameObject = UnityEngine.Object.Instantiate(objets.Valeur(clef), new Vector3Int(position.X(), position.Y(), 0), Quaternion.identity);
                 }
 
-                // Ajout aux tilemaps
+                PrefabUtils.InstanciePrefabs(contenuConverti.ToArray(), grid);
+
+                // Construction des tilemaps
                 TilemapUtils.InsertToTilemaps(tilemaps, tiles, donnee.Blueprints());
-                
             }
             
         }
