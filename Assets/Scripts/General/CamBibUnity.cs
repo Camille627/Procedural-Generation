@@ -250,25 +250,23 @@ namespace CamBibUnity
     {
         // Classe paire clef-valeur
         [Serializable]
-        public class MaDictObjet
+        public class DictAssociation
         {
-            [SerializeField]
-            private TClef clef;
-            [SerializeField]
-            private TValeur valeur;
+            [SerializeField] private TClef clef;
+            [SerializeField] private TValeur valeur;
 
             // build
-            public MaDictObjet()
+            public DictAssociation()
             {
                 clef = default;
                 valeur = default;
             }
-            public MaDictObjet(MaDictObjet model)
+            public DictAssociation(DictAssociation model)
             {
                 clef = model.clef;
                 valeur = model.valeur;
             }
-            public MaDictObjet(TClef clef, TValeur valeur)
+            public DictAssociation(TClef clef, TValeur valeur)
             {
                 this.clef = clef;
                 this.valeur = valeur;
@@ -301,28 +299,31 @@ namespace CamBibUnity
             }
         }
 
-        [SerializeField]
-        private MaDictObjet[] objets;
+        [SerializeField] private DictAssociation[] objets;
+        [SerializeField] private bool clefsUniques;
 
         // build
-        public MaDict()
+        public MaDict(bool clefsUniques = false)
         {
-            objets = new MaDictObjet[0];
+            objets = new DictAssociation[0];
+            this.clefsUniques = clefsUniques;
         }
         public MaDict(MaDict<TClef,TValeur> model)
         {
-            objets = new MaDictObjet[model.objets.Length];
+            objets = new DictAssociation[model.objets.Length];
             for (int i = 0; i < model.objets.Length; i++)
             {
-                objets[i] = new MaDictObjet(model.objets[i]);
+                objets[i] = new DictAssociation(model.objets[i]);
             }
+            clefsUniques = model.clefsUniques;
         }
 
         // get
+        public bool ClefsUniques() { return clefsUniques; }
         public int Length() { return objets.Length; }
         public TValeur Valeur(TClef clef) // Retourne la première occurence
         {
-            foreach (MaDictObjet objet in objets)
+            foreach (DictAssociation objet in objets)
             {
                 if (EqualityComparer<TClef>.Default.Equals(objet.Clef(), clef)) { return objet.Valeur(); }
             }
@@ -333,6 +334,16 @@ namespace CamBibUnity
             TClef[] clefs = new TClef[objets.Length];
             for (int k = 0; k < objets.Length; k++) { clefs[k] = objets[k].Clef(); }
             return clefs;
+        }
+        public TClef[] DifferentesClefs()
+        {
+            List<TClef> differentesClefs = new List<TClef>();
+            for (int k = 0; k < objets.Length; k++) 
+            {
+                TClef clef = objets[k].Clef();
+                if (!differentesClefs.Contains(clef)) { differentesClefs.Add(clef); } 
+            }
+            return differentesClefs.ToArray();
         }
         public TValeur[] Valeurs()
         {
@@ -350,7 +361,7 @@ namespace CamBibUnity
         /// <param name="valeur">La nouvelle valeur à associer à cette clef</param>
         public void SetValeur(TClef clef, TValeur valeur)
         {
-            foreach (MaDictObjet objet in objets)
+            foreach (DictAssociation objet in objets)
             {
                 if (clef.Equals(objet.Clef()))
                 {
@@ -366,7 +377,7 @@ namespace CamBibUnity
         {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine($"MaDict<{typeof(TClef)}, {typeof(TValeur)}> ; Longueur:{objets.Length}");
-            foreach (MaDictObjet objet in objets)
+            foreach (DictAssociation objet in objets)
             {
                 builder.AppendLine('|' + objet.ToString());
             }
@@ -374,18 +385,49 @@ namespace CamBibUnity
             return builder.ToString();
         }
 
-        public void Ajoute(MaDictObjet objet)
+        // Indicateur
+        public bool Contient(TClef clef)
         {
-            MaDictObjet[] nouveauxObjets = new MaDictObjet[objets.Length + 1];
+            for (int k = 0; k < objets.Length; k++)
+            {
+                if (clef.Equals(objets[k].Clef())) { return true; }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Vérifie si les clefs d'un dictionnaire sont uniques indépendamment du paramètre ClefsUniques
+        /// </summary>
+        /// <returns>true si les associations du dictionnaires on toutes des clefs differentes</returns>
+        public bool IsClefsUniques()
+        {
+            List<TClef> verifiees = new List<TClef>();
+            for (int k = 0; k < objets.Length; k++) 
+            { 
+                if (verifiees.Contains(objets[k].Clef())) { return false; }
+                else { verifiees.Add(objets[k].Clef()); }
+            }
+            return true;
+        }
+
+        public void Ajoute(DictAssociation objet)
+        {
+            // Erreur ClefsUniques
+            if(clefsUniques && Contient(objet.Clef())) { throw new Exception("La clefs est déjà associée à une valeur"); }
+
+            DictAssociation[] nouveauxObjets = new DictAssociation[objets.Length + 1];
             for (int i = 0; i < objets.Length; i++) { nouveauxObjets[i] = objets[i]; }
             nouveauxObjets[^1] = objet;
             objets = nouveauxObjets;
         }
         public void Ajoute(TClef clef, TValeur valeur)
         {
-            MaDictObjet[] nouveauxObjets = new MaDictObjet[objets.Length + 1];
+            // Erreur ClefsUniques
+            if (clefsUniques && Contient(clef)) { throw new Exception("La clefs est déjà associée à une valeur"); }
+
+            DictAssociation[] nouveauxObjets = new DictAssociation[objets.Length + 1];
             for (int i = 0; i < objets.Length; i++) { nouveauxObjets[i] = objets[i]; }
-            nouveauxObjets[^1] = new MaDictObjet(clef, valeur);
+            nouveauxObjets[^1] = new DictAssociation(clef, valeur);
             objets = nouveauxObjets;
         }
 
@@ -405,6 +447,11 @@ namespace CamBibUnity
             throw new ArgumentException("Aucune association du dictionnaire n'a cette clef","clef");
         }
 
+        /// <summary>
+        /// Retire et compte toutes les associations ayant une clef précise du dictionnaire
+        /// </summary>
+        /// <param name="clef">La clef dont on veut retirer toutes les associations</param>
+        /// <returns>Le nombre d'associations retirées</returns>
         public int RetireTous(TClef clef)
         {
             List<int> indices = new List<int>();
@@ -426,6 +473,11 @@ namespace CamBibUnity
             return association;
         }
 
+        /// <summary>
+        /// Compte le nombre d'association ayant une clef particulière
+        /// </summary>
+        /// <param name="clef">La clef</param>
+        /// <returns>Le nombre d'associations ayant la clef passée en paramètre</returns>
         public int Compte(TClef clef)
         {
             int compte = 0;
@@ -438,7 +490,7 @@ namespace CamBibUnity
         {
             Dictionary<TClef, TValeur> dictionnaire = new Dictionary<TClef, TValeur>();
 
-            foreach (MaDictObjet paire in objets)
+            foreach (DictAssociation paire in objets)
             {
                 dictionnaire.Add(paire.Clef(), paire.Valeur());
             }

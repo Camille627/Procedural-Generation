@@ -3333,7 +3333,7 @@ namespace CamBib
                 {
                     throw new ArgumentNullException("blueprintToAdd", "Le blueprint à ajouter est vide.");
                 }
-                if (this.IsEmpty())
+                if (IsEmpty())
                 {
                     // initialise avec le blueprint à ajouter
                     SetMatrix(blueprintToAdd.matrice);
@@ -3355,14 +3355,14 @@ namespace CamBib
                 if (resize)
                 {
                     // Coordonnees extremes
-                    int minX = Fonctions.NumUtils.Min(this.position.X(), blueprintToAdd.Position().X());
-                    int maxX = Fonctions.NumUtils.Max(width + this.position.X(), blueprintToAdd.Width() + blueprintToAdd.Position().X());
-                    int minY = Fonctions.NumUtils.Min(this.position.Y(), blueprintToAdd.Position().Y());
-                    int maxY = Fonctions.NumUtils.Max(height + this.position.Y(), blueprintToAdd.Height() + blueprintToAdd.Position().Y());
+                    int minX = NumUtils.Min(this.position.X(), blueprintToAdd.Position().X());
+                    int maxX = NumUtils.Max(width + this.position.X(), blueprintToAdd.Width() + blueprintToAdd.Position().X());
+                    int minY = NumUtils.Min(this.position.Y(), blueprintToAdd.Position().Y());
+                    int maxY = NumUtils.Max(height + this.position.Y(), blueprintToAdd.Height() + blueprintToAdd.Position().Y());
                     // Decalage
                     PaireInt newPosition = new PaireInt(
-                        Fonctions.NumUtils.Min(this.position.X(), blueprintToAdd.Position().X()),
-                        Fonctions.NumUtils.Min(this.position.Y(), blueprintToAdd.Position().Y()));
+                        NumUtils.Min(this.position.X(), blueprintToAdd.Position().X()),
+                        NumUtils.Min(this.position.Y(), blueprintToAdd.Position().Y()));
                     // Nouvelles dimensions
                     int newWidth = maxX - minX;
                     int newHeight = maxY - minY;
@@ -3383,10 +3383,10 @@ namespace CamBib
                 }
                 else
                 {
-                    firstX = Fonctions.NumUtils.Max(this.position.X(), blueprintToAdd.Position().X());
-                    lastX = Fonctions.NumUtils.Min(this.position.X() + width, blueprintToAdd.Position().X() + blueprintToAdd.Width()) - 1;
-                    firstY = Fonctions.NumUtils.Max(this.position.Y(), blueprintToAdd.Position().Y());
-                    lastY = Fonctions.NumUtils.Min(this.position.Y() + height, blueprintToAdd.Position().Y() + blueprintToAdd.Height()) - 1;
+                    firstX = NumUtils.Max(this.position.X(), blueprintToAdd.Position().X());
+                    lastX = NumUtils.Min(this.position.X() + width, blueprintToAdd.Position().X() + blueprintToAdd.Width()) - 1;
+                    firstY = NumUtils.Max(this.position.Y(), blueprintToAdd.Position().Y());
+                    lastY = NumUtils.Min(this.position.Y() + height, blueprintToAdd.Position().Y() + blueprintToAdd.Height()) - 1;
                 }
 
 

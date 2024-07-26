@@ -351,130 +351,6 @@ namespace SommetArrete
         }
 
         /// <summary>
-        /// Ajoute des détails dans la construction du sommet en fonction de ses données mais aussi des données des éléments voisins (ex : arrètes).
-        /// Cette fonction peut placer des gameObjects et modifier les blueprints pour agencer l'espace. 
-        /// </summary>
-        /// <param name="donnee"></param>
-        /// <returns></returns>
-        public static void LayerSommet(Graphe<DataSommetStandard, DataArreteStandard> graphe, DataSommetStandard donnee)
-        {
-            Random random = new Random(donnee.Seed());
-            
-            //// Matrice de remplissabilité (donnant une valeur à chaque case du blueprint pour savoir si on peut le remplir)
-            
-            // Récupérations des tracés des arretes voisines
-            List<Paire<int>[]> chemins = new List<Paire<int>[]>();
-            DataArreteStandard[] donneeArretesAdjacentes = graphe.DonneeArretes(graphe.SommetIndex(donnee.SommetID()));
-            Debug.Log("Sommet:" + graphe.SommetIndex(donnee.SommetID()));
-            foreach (DataArreteStandard donneeArrete in donneeArretesAdjacentes) { chemins.Add(donneeArrete.Points()); }
-            // Calcul des intersections des tracés des arrètes et du blueprint du sommet (Les entrées de la salle)
-            Paire<int>[] entrees = new Paire<int>[chemins.Count];
-            for ( int indexChemin = 0; indexChemin < chemins.Count; indexChemin++ )
-            {
-                Paire<int>[] chemin = chemins[indexChemin];
-                double distanceExtremite0 = Paire<int>.DistanceEuclidienne(donnee.Position(), chemin[0]);
-                double distanceExtremite1 = Paire<int>.DistanceEuclidienne(donnee.Position(), chemin[^1]);
-                int index = distanceExtremite0 < distanceExtremite1 ? 0 : chemin.Length - 1;
-                int increment = index == 0 ? 1 : -1;
-
-                int x = chemin[index].X();
-                int y = chemin[index].Y();
-                while (donnee.Blueprints()[0].IsValidPosition(x, y) && (donnee.Blueprints()[0].Valeur(x,y) >= 0)) 
-                { 
-                    index += increment;
-                    x = chemin[index].X();
-                    y = chemin[index].Y();
-                }
-
-                entrees[indexChemin] = new Paire<int>(x,y); //Ajt la position trouvée
-            }
-            
-            // Calcul de la matrice de remplissabilité
-            Blueprint remplissabilite = new Blueprint(donnee.Blueprints()[0]);
-            int valeurInobstruable = int.MinValue; // definit les cases sur lesquelles le joueur doit pouvoir passer
-            int valeurPrefab = -2; // definit les cases sur lesquelles on place un prefab
-
-            Paire<double> centroid;
-            if (entrees.Length == 1)
-            {
-                centroid = (Paire<double>)entrees[0];
-            } 
-            else if (entrees.Length > 1)
-            {
-                // Etablissement des chemins inobstruables liants les entrées de la salle
-                centroid = MathUtils.Centroide(Paire<int>.ConvertToArrayPaireDoubles(entrees));
-                for (int i = 0; i < entrees.Length; i++)
-                {
-                    PaireInt dimensions = Paire<int>.Soustraction(entrees[i], centroid);
-                    Blueprint cheminInobstruable = Blueprint.Courbe(dimensions, new Blueprint(1, 1, valeurInobstruable));
-                    cheminInobstruable.SetPosition(PaireInt.Somme(cheminInobstruable.Position(), centroid));
-                    remplissabilite.InsertToBlueprint(cheminInobstruable);
-                }
-            } 
-            else 
-            { throw new Exception("Il n'y à pas d'entrée dans cette salle. Celà veut dire qu'elle n'est pas connectée au reste du niveau."); }
-            
-
-            // Etablissement de la valeur de remplissabilité de chaque case du blueprint (distance euclidienne au centroid)
-            int x0 = remplissabilite.Position()[0];
-            int y0 = remplissabilite.Position()[1];
-            for (int x = 0; x < remplissabilite.Width(); x++)
-            {
-                for (int y = 0; y < remplissabilite.Height(); y++)
-                {
-                    if (remplissabilite[x0+x,y0+y] != valeurInobstruable && remplissabilite[x0 + x, y0 + y] != -1)
-                    {
-                        remplissabilite[x0 + x, y0 + y] = (int)Paire<double>.DistanceEuclidienne(centroid, new Paire<double>(x0 + x, y0 + y)); // Il faut créer une matrice de double pour stocker les doubles ou permetre cela dans les blueprints
-                    }
-                }
-            }
-
-            Debug.Log("remplissabilite: " + remplissabilite);
-            
-            //// Macrice d'agencement (elle décrit la manière dont est agencée la salle)
-            
-            Blueprint agencement = new Blueprint(donnee.Blueprints()[0]);
-            List<Paire<int>> positionsLibres;
-
-            // Ajout des obstacles (valeur d'identification : 1)
-            int max = NumUtils.Max(remplissabilite.Matrice());
-            
-            if(max > 0)
-            {
-                
-                positionsLibres = MatriceUtils.Indices(remplissabilite.Matrice(), max);
-                int nombreObstacles = random.Next((positionsLibres.Count/2)+1); // environ 1 pour 2 espaces libres
-                
-                for (int i = 0; i < nombreObstacles; i++)
-                {
-                    int positionIndex = random.Next(positionsLibres.Count);
-                    agencement[PaireInt.Somme(agencement.Position(),positionsLibres[positionIndex])] = 1;
-                    positionsLibres.RemoveAt(positionIndex);
-                }
-            }
-
-            // Remplissage des cases de valeur moyenne avec "caisses"
-
-            // Remplissage du chemin avec des "ennemis"
-
-            positionsLibres = remplissabilite.IndicesMin();
-            int nbEnnemis = donnee.Contenu().RetireTous("Enemy");
-            Debug.Log("nbEnnemis:" + nbEnnemis);
-            Debug.Log("contenu sans ennemis:" + donnee.Contenu());
-            for (int i = 0; i < nbEnnemis; i++)
-            {
-                Paire<int> position = Paire<int>.Somme(agencement.Position(), positionsLibres[random.Next(positionsLibres.Count)]);
-                Debug.Log("position:" + Paire<int>.Somme(position, donnee.Position()));
-                agencement[position] = valeurPrefab;
-                donnee.Contenu().Ajoute("Enemy", position);
-            }
-            Debug.Log("contenu :" + donnee.Contenu());
-            Debug.Log("agencement: " + agencement);
-            
-            return;
-        }
-
-        /// <summary>
         /// Construit le blueprint d'une arrete d'un graphe en fonction de ses données
         /// </summary>
         /// <param name="donnee">Les donnees de l'arrete</param>
@@ -508,7 +384,155 @@ namespace SommetArrete
 
 
 
-                return blueprints;
+            return blueprints;
+        }
+
+        /// <summary>
+        /// Ajoute des détails dans la construction du sommet en fonction de ses données mais aussi des données des éléments voisins (ex : arrètes).
+        /// Cette fonction peut placer des gameObjects et modifier les blueprints pour agencer l'espace. 
+        /// </summary>
+        /// <param name="donnee"></param>
+        /// <returns></returns>
+        public static void LayerSommet(Graphe<DataSommetStandard, DataArreteStandard> graphe, DataSommetStandard donnee)
+        {
+            Random random = new Random(donnee.Seed());
+
+            //// Matrice de remplissabilité (donnant une valeur à chaque case du blueprint pour savoir si on peut le remplir)
+
+            // Récupérations des tracés des arretes voisines
+            List<Paire<int>[]> chemins = new List<Paire<int>[]>();
+            DataArreteStandard[] donneeArretesAdjacentes = graphe.DonneeArretes(graphe.SommetIndex(donnee.SommetID()));
+            Debug.Log("Sommet:" + graphe.SommetIndex(donnee.SommetID()));
+            foreach (DataArreteStandard donneeArrete in donneeArretesAdjacentes) { chemins.Add(donneeArrete.Points()); }
+            // Calcul des intersections des tracés des arrètes et du blueprint du sommet (Les entrées de la salle)
+            Paire<int>[] entrees = new Paire<int>[chemins.Count];
+            for (int indexChemin = 0; indexChemin < chemins.Count; indexChemin++)
+            {
+                Paire<int>[] chemin = chemins[indexChemin];
+                double distanceExtremite0 = Paire<int>.DistanceEuclidienne(donnee.Position(), chemin[0]);
+                double distanceExtremite1 = Paire<int>.DistanceEuclidienne(donnee.Position(), chemin[^1]);
+                int index = distanceExtremite0 < distanceExtremite1 ? 0 : chemin.Length - 1;
+                int increment = index == 0 ? 1 : -1;
+
+                int x = chemin[index].X();
+                int y = chemin[index].Y();
+                while (donnee.Blueprints()[0].IsValidPosition(x, y) && (donnee.Blueprints()[0].Valeur(x, y) >= 0))
+                {
+                    index += increment;
+                    x = chemin[index].X();
+                    y = chemin[index].Y();
+                }
+
+                entrees[indexChemin] = new Paire<int>(x, y); //Ajt la position trouvée
+            }
+
+            // Calcul de la matrice de remplissabilité
+            List<Blueprint> blueprints = donnee.Blueprints();
+            Blueprint remplissabilite = new Blueprint(blueprints[0]);
+            int valeurInobstruable = int.MinValue; // definit les cases sur lesquelles le joueur doit pouvoir passer
+            int valeurPrefab = -2; // definit les cases sur lesquelles on place un prefab
+
+            Paire<double> centroid;
+            if (entrees.Length == 1)
+            {
+                centroid = (Paire<double>)entrees[0];
+            }
+            else if (entrees.Length > 1)
+            {
+                // Etablissement des chemins inobstruables liants les entrées de la salle
+                centroid = MathUtils.Centroide(Paire<int>.ConvertToArrayPaireDoubles(entrees));
+                for (int i = 0; i < entrees.Length; i++)
+                {
+                    PaireInt dimensions = Paire<int>.Soustraction(entrees[i], centroid);
+                    Blueprint cheminInobstruable = Blueprint.Courbe(dimensions, new Blueprint(1, 1, valeurInobstruable));
+                    cheminInobstruable.SetPosition(PaireInt.Somme(cheminInobstruable.Position(), centroid));
+                    remplissabilite.InsertToBlueprint(cheminInobstruable);
+                }
+            }
+            else
+            { throw new Exception("Il n'y à pas d'entrée dans cette salle. Celà veut dire qu'elle n'est pas connectée au reste du niveau."); }
+
+
+            // Etablissement de la valeur de remplissabilité de chaque case du blueprint (distance euclidienne au centroid)
+            int x0 = remplissabilite.Position()[0];
+            int y0 = remplissabilite.Position()[1];
+            for (int x = 0; x < remplissabilite.Width(); x++)
+            {
+                for (int y = 0; y < remplissabilite.Height(); y++)
+                {
+                    if (remplissabilite[x0 + x, y0 + y] != valeurInobstruable && remplissabilite[x0 + x, y0 + y] != -1)
+                    {
+                        remplissabilite[x0 + x, y0 + y] = (int)Paire<double>.DistanceEuclidienne(centroid, new Paire<double>(x0 + x, y0 + y)); // Il faut créer une matrice de double pour stocker les doubles ou permetre cela dans les blueprints
+                    }
+                }
+            }
+
+            Debug.Log("remplissabilite: " + remplissabilite);
+
+            //// Macrice d'agencement (elle décrit la manière dont est agencée la salle)
+
+            Blueprint agencement = new Blueprint(donnee.Blueprints()[0]);
+            List<Paire<int>> positionsLibres;
+
+            // Ajout des obstacles (valeur d'identification : 1)
+            int max = NumUtils.Max(remplissabilite.Matrice());
+
+            if (max > 0)
+            {
+
+                positionsLibres = MatriceUtils.Indices(remplissabilite.Matrice(), max);
+                int nombreObstacles = random.Next((positionsLibres.Count / 2) + 1); // environ 1 pour 2 espaces libres
+
+                for (int i = 0; i < nombreObstacles; i++)
+                {
+                    int positionIndex = random.Next(positionsLibres.Count);
+                    agencement[PaireInt.Somme(agencement.Position(), positionsLibres[positionIndex])] = 1;
+                    positionsLibres.RemoveAt(positionIndex);
+                }
+            }
+
+            // Remplissage des cases de valeur moyenne avec "caisses"
+
+            // Remplissage du chemin avec des "ennemis"
+
+            positionsLibres = remplissabilite.IndicesMin();
+            int nbEnnemis = donnee.Contenu().RetireTous("Enemy");
+            for (int i = 0; i < nbEnnemis; i++)
+            {
+                Paire<int> position = Paire<int>.Somme(agencement.Position(), positionsLibres[random.Next(positionsLibres.Count)]);
+                agencement[position] = valeurPrefab;
+                donnee.Contenu().Ajoute("Enemy", position);
+            }
+            Debug.Log("agencement: " + agencement);
+
+            // Conversion agencement > Blueprint
+            MaDict<int, Tuple<int, int>> associationAgencementTile = new MaDict<int, Tuple<int, int>>(clefsUniques: true);
+            associationAgencementTile.Ajoute(1, Tuple.Create(1, 2)); // obstacle >> tilemap n°1, tile n°2
+
+            int[,] matrice = agencement.Matrice();
+
+            for (int i = 0; i < matrice.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrice.GetLength(1); j++)
+                {
+                    if (matrice[i, j] == -1 || matrice[i, j] == 0) { continue; }
+                    else if (associationAgencementTile.Contient(matrice[i, j]))
+                    {
+                        int blueprintIndex = associationAgencementTile.Valeur(matrice[i, j]).Item1;
+                        PaireInt positionAjout = new PaireInt(i + agencement.Position()[0], j + agencement.Position()[1]); Debug.Log("positionAjout:" + positionAjout);
+                        int tileIndex = associationAgencementTile.Valeur(matrice[i, j]).Item2; Debug.Log("tileIndex:" + tileIndex);
+                        blueprints[blueprintIndex].InsertToBlueprint(new Blueprint(1, 1, tileIndex), positionAjout);
+                        for (int index = 0; index < blueprints.Count; index++)
+                        {
+                            blueprints[index][positionAjout.X(), positionAjout.Y()] = index == blueprintIndex ? tileIndex : -1;
+                            Debug.Log(blueprints[blueprintIndex]);
+                        }
+                    }
+                    else { matrice[i, j] = 0; }
+                }
+            }
+
+            return;
         }
 
         /// <summary>
