@@ -575,6 +575,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c747045b87857c4d99c78d60afaa40b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  grid: {fileID: 652221509}
   tilemaps:
   - {fileID: 700512555}
   - {fileID: 2126386893}

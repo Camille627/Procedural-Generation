@@ -557,7 +557,7 @@ namespace SommetArrete
 
                 }
 
-                PrefabUtils.InstanciePrefabs(contenuConverti.ToArray(), grid);
+                PrefabUtils.InstanciePrefabs(contenuConverti.ToArray(), grid, new float[] { 0.5f, 0.5f, 0f});
 
                 // Construction des tilemaps
                 TilemapUtils.InsertToTilemaps(tilemaps, tiles, donnee.Blueprints());

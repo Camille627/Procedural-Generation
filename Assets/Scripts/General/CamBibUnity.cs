@@ -188,8 +188,20 @@ namespace CamBibUnity
         /// <param name="prefabs">Un tableau de tuples associant chacun une position au prefab que l'on souhaite instancier.</param>
         /// <param name="grid">Si ce paramètre est renseigné, la grille est utilisée pour récupérer la bonne position.</param>
         /// <returns>Un tableau contenant les références des objets instanciés (dans l'ordre du tableau de tuples).</returns>
-        public static GameObject[] InstanciePrefabs(Tuple<GameObject, Paire<int>>[] prefabs, Grid grid = null)
+        public static GameObject[] InstanciePrefabs(Tuple<GameObject, Paire<int>>[] prefabs, Grid grid = null, float[] offset = null)
         {
+            // Offset
+            Vector3 vectOffset;
+            if (offset != null)
+            {
+                if(offset.Length != 3) { throw new ArgumentException("Le tableau représente les coordonnées d'un vecteur3. Il doit avoir 3 valeurs","offset"); }
+                vectOffset = new Vector3(offset[0], offset[1], offset[2]);
+            }
+            else
+            {
+                vectOffset = Vector3.zero;
+            }
+
             List<GameObject> objets = new List<GameObject>();
 
             foreach (var element in prefabs)
@@ -207,7 +219,7 @@ namespace CamBibUnity
                 }
 
                 // Instancier le prefab à la position calculée avec une rotation par défaut
-                GameObject gameObject = UnityEngine.Object.Instantiate(element.Item1, position, Quaternion.identity);
+                GameObject gameObject = UnityEngine.Object.Instantiate(element.Item1, position + vectOffset, Quaternion.identity);
                 objets.Add(gameObject);
             }
 
