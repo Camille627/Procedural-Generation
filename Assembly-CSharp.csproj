@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\UI\HealthUI.cs" />
     <Compile Include="Assets\Scripts\Level\LevelController.cs" />
     <Compile Include="Assets\Scripts\General\CamBibUnity.cs" />
+    <Compile Include="Assets\Scripts\Entities\EnemyController2.cs" />
     <Compile Include="Assets\Scripts\UI\Exit.cs" />
     <Compile Include="Assets\Scripts\Entities\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Level\SommetArrete.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Assets\Scripts\Entities\ProjectileManager.cs" />
     <Compile Include="Assets\Scripts\UI\CameraController.cs" />
     <Compile Include="Assets\Scripts\Entities\Health.cs" />
+    <Compile Include="Assets\Scripts\Interfaces\IDamageable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Textures\Piskels\readme.txt" />

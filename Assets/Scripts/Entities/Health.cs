@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Health : MonoBehaviour
+public class Health : MonoBehaviour, IDamageable
 {
     public const float maxHealth = 1f;
     
@@ -32,7 +32,7 @@ public class Health : MonoBehaviour
     }
 
     //prendre des dégats
-    public void TakeDamage(int amount)
+    public void Hit(int amount)
     {
         //diminution de vie en fonction des dégats
         currentHealth -= amount;

@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController2 : MonoBehaviour
 {
     public float moveSpeed; // Vitesse de déplacement de l'ennemi
     public float updateInterval; // Intervalle entre les mises à jour en secondes
@@ -48,7 +48,6 @@ public class EnemyController : MonoBehaviour
             attackTimer -= Time.deltaTime;
         }
     }
-
     private void DestroyObject() { Destroy(gameObject); }
 
     private void OnDestroy() { LevelManager.OnLevelEnded -= DestroyObject; }

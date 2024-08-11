@@ -36,11 +36,11 @@ public class ProjectileManager : MonoBehaviour
         {
             // Récupération de l'objet touché
             var hit = collision.gameObject;
-            var health = hit.GetComponent<Health>();
+            var health = hit.GetComponent<IDamageable>();
             if (health != null)
             {
                 //Application des dégats
-                health.TakeDamage(damages);
+                health.Hit(damages);
             }
 
             Destroy(gameObject);
