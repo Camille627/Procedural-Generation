@@ -1,38 +1,77 @@
 using System.Collections;
 using UnityEngine;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IDamageable
 {
+    public const float maxHealth = 1f; // Quantité maximale de points de vie
     public float moveSpeed; // Vitesse de déplacement de l'ennemi
     public float updateInterval; // Intervalle entre les mises à jour en secondes
     public float detectionRange; // Distance de détection du joueur
     public LayerMask layerMask; // LayerMask pour la detection du joueur
 
-    private GameObject player; // Référence au joueur
-    private Rigidbody2D rb2D; // Référence au Rigidbody2D de l'ennemi
-    
+    private float currentHealth = maxHealth; // Quantité de points de vie actuelle
+    private GameObject target; // Référence à la cible de l'entité
+    private Rigidbody2D rb2D; // Référence au Rigidbody2D de l'entité
+
     [SerializeField] private int damageAmount = 1; // Dégâts infligés au joueur par l'ennemi
     [SerializeField] private float attackRange = 1.0f; // Distance d'attaque de l'ennemi
     [SerializeField] private float attackCooldown = 1.0f; // Temps entre chaque attaque
     private float attackTimer; // Chronomètre pour gérer le temps entre les attaques
 
+
+    /* Pour prévenir le LevelManager de a destruction */
+    /// <summary>
+    /// Délégué pour l'événement de destruction de l'entité.
+    /// </summary>
+    /// <param name="valeur">Le GameObject qui a été détruit.</param>
+    public delegate void GameOjectDelegate(GameObject valeur);
+    /// <summary>
+    /// Événement déclenché lorsque le gameObject est détruit.
+    /// </summary>
+    public event GameOjectDelegate OnKilled;
+
+    /* IDamageable */
+    /// <summary>
+    /// Gère les dégats reçus par l'entité
+    /// (Implémentation de IDamageable)
+    /// </summary>
+    /// <param name="amount">quantité de dégats reçu</param>
+    public void Hit(int amount)
+    {
+        //diminution de vie en fonction des dégats
+        currentHealth -= amount;
+
+        //si la vie actuelle atteint 0 le personnage meurt
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            // Déclenche l'événement de mort
+            OnKilled?.Invoke(gameObject);
+            // Détruit le gameObject
+            Destroy(gameObject);
+        }
+
+    }
+
+
     private void Start()
     {
-        LevelManager.OnLevelEnded += DestroyObject;
+        // Abonnement à l'évènement de fin du niveau (destruction du GameObject avec expression lambda)
+        LevelManager.OnLevelEnded += DestroyGameObject;
 
         // Récupération de variable
         rb2D = GetComponent<Rigidbody2D>();
-        if ( rb2D == null) { throw new System.Exception("No component Rigidbody2D on this gameObject"); }
-        
+        if (rb2D == null) { throw new System.Exception("No component Rigidbody2D on this gameObject"); }
+
         // Upadate tous les updateInterval secondes
         StartCoroutine(UpdateEnemy());
     }
 
-    
+
     private void Update()
     {
         // Vérifie si le joueur est à portée d'attaque
-        if (player != null && Vector3.Distance(transform.position, player.transform.position) <= attackRange)
+        if (target != null && Vector3.Distance(transform.position, target.transform.position) <= attackRange)
         {
             // Vérifie si l'ennemi peut attaquer (cooldown terminé)
             if (attackTimer <= 0f)
@@ -49,9 +88,6 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private void DestroyObject() { Destroy(gameObject); }
-
-    private void OnDestroy() { LevelManager.OnLevelEnded -= DestroyObject; }
 
     /// <summary>
     /// Attaquer le joueur
@@ -59,7 +95,7 @@ public class EnemyController : MonoBehaviour
     private void AttackPlayer()
     {
         // Récupère le script PlayerHealth attaché au joueur
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
 
         // Si le joueur a un script PlayerHealth, lui inflige des dégâts
         if (playerHealth != null)
@@ -71,19 +107,19 @@ public class EnemyController : MonoBehaviour
 
     public void FindPlayer()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+        target = GameObject.FindGameObjectWithTag("Player");
     }
 
     IEnumerator UpdateEnemy()
     {
         while (true)
         {
-            if (player != null)
+            if (target != null)
             {
-                float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+                float distanceToPlayer = Vector3.Distance(transform.position, target.transform.position);
                 if (distanceToPlayer <= detectionRange)
                 {
-                    Vector2 directionToPlayer = (player.transform.position - transform.position).normalized;
+                    Vector2 directionToPlayer = (target.transform.position - transform.position).normalized;
                     RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToPlayer, detectionRange, layerMask);
 
                     if (hit.collider != null && hit.collider.gameObject.CompareTag("Player"))
@@ -107,8 +143,28 @@ public class EnemyController : MonoBehaviour
             {
                 FindPlayer();
             }
-            
+
             yield return new WaitForSeconds(updateInterval);
         }
+    }
+
+
+    /* OnDestroy */
+
+    /// <summary>
+    /// Abonnée à l'evenement OnLevelEnded du LevelManager
+    /// </summary>
+    private void DestroyGameObject() { Destroy(gameObject); }
+
+    /// <summary>
+    /// Méthode appelée par Unity juste avant que l'objet ne soit détruit.
+    /// Déclenche l'événement OnDestroyed pour notifier les abonnés.
+    /// Se désabonne de l'évènement OnLevelEnded du LevelManager
+    /// </summary>
+    void OnDestroy()
+    {
+        // Désabonnement de la destruction lors de la fin du niveau
+        LevelManager.OnLevelEnded -= DestroyGameObject;
+
     }
 }

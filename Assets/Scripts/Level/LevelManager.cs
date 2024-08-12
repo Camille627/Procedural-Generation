@@ -167,7 +167,7 @@ public class LevelManager : MonoBehaviour
         foreach (GameObject enemy in enemies)
         {
             activeEnemies.Add(enemy);
-            enemy.GetComponent<Health>().OnDestroyed += OnEnemyDestroyed;
+            enemy.GetComponent<EnemyController>().OnKilled += OnEnemyDestroyed;
         }
 
         // On lance le jeu
