@@ -40,7 +40,7 @@ public class ProjectileManager : MonoBehaviour
             if (health != null)
             {
                 //Application des dégats
-                health.Hit(damages);
+                health.TakeDamage(damages);
             }
 
             Destroy(gameObject);

@@ -3,168 +3,151 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour, IDamageable
 {
-    public const float maxHealth = 1f; // Quantité maximale de points de vie
-    public float moveSpeed; // Vitesse de déplacement de l'ennemi
-    public float updateInterval; // Intervalle entre les mises à jour en secondes
-    public float detectionRange; // Distance de détection du joueur
-    public LayerMask layerMask; // LayerMask pour la detection du joueur
+    public float maxHealth = 2f;
+    private float currentHealth;
 
-    private float currentHealth = maxHealth; // Quantité de points de vie actuelle
-    private GameObject target; // Référence à la cible de l'entité
-    private Rigidbody2D rb2D; // Référence au Rigidbody2D de l'entité
+    public float meleeDamage = 1f;
+    public float meleeRange = 1.5f; // Portée de l'attaque de mêlée
+    public float meleeAttackCooldown = 1f; // Temps de recharge entre les attaques de mêlée
 
-    [SerializeField] private int damageAmount = 1; // Dégâts infligés au joueur par l'ennemi
-    [SerializeField] private float attackRange = 1.0f; // Distance d'attaque de l'ennemi
-    [SerializeField] private float attackCooldown = 1.0f; // Temps entre chaque attaque
-    private float attackTimer; // Chronomètre pour gérer le temps entre les attaques
+    public Transform target;
+    public LayerMask obstacleLayer; // Layer des obstacles qui peuvent bloquer la vue
 
+    private float distanceToTarget;
+    private bool isTargetVisible;
 
-    /* Pour prévenir le LevelManager de a destruction */
-    /// <summary>
-    /// Délégué pour l'événement de destruction de l'entité.
-    /// </summary>
-    /// <param name="valeur">Le GameObject qui a été détruit.</param>
-    public delegate void GameOjectDelegate(GameObject valeur);
-    /// <summary>
-    /// Événement déclenché lorsque le gameObject est détruit.
-    /// </summary>
-    public event GameOjectDelegate OnKilled;
+    private Rigidbody2D rb; // Composant Rigidbody2D pour gérer la vélocité
 
-    /* IDamageable */
-    /// <summary>
-    /// Gère les dégats reçus par l'entité
-    /// (Implémentation de IDamageable)
-    /// </summary>
-    /// <param name="amount">quantité de dégats reçu</param>
-    public void Hit(int amount)
-    {
-        //diminution de vie en fonction des dégats
-        currentHealth -= amount;
+    private enum State { Idle, MeleeAttack }
+    private State currentState = State.Idle;
 
-        //si la vie actuelle atteint 0 le personnage meurt
-        if (currentHealth <= 0)
-        {
-            currentHealth = 0;
-            // Déclenche l'événement de mort
-            OnKilled?.Invoke(gameObject);
-            // Détruit le gameObject
-            Destroy(gameObject);
-        }
+    public float idleWaitTimeClose = 0.2f; // Durée de l'état d'attente si la cible est proche
+    public float idleWaitTimeFar = 2f; // Durée de l'état d'attente si la cible est éloignée
+    public float closeDistanceThreshold = 20f; // Distance seuil pour considérer la cible comme "proche"
 
-    }
-
+    public delegate void GameObjectDelegate(GameObject valeur);
+    public event GameObjectDelegate OnKilled;
 
     private void Start()
     {
-        // Abonnement à l'évènement de fin du niveau (destruction du GameObject avec expression lambda)
+        currentHealth = maxHealth;
+        target = GameObject.Find("Player").transform;
+        rb = GetComponent<Rigidbody2D>(); // Initialiser le Rigidbody2D
+
         LevelManager.OnLevelEnded += DestroyGameObject;
 
-        // Récupération de variable
-        rb2D = GetComponent<Rigidbody2D>();
-        if (rb2D == null) { throw new System.Exception("No component Rigidbody2D on this gameObject"); }
-
-        // Upadate tous les updateInterval secondes
-        StartCoroutine(UpdateEnemy());
+        StateManager(); // Démarre la machine d'état
     }
 
-
-    private void Update()
+    private void StateManager()
     {
-        // Vérifie si le joueur est à portée d'attaque
-        if (target != null && Vector3.Distance(transform.position, target.transform.position) <= attackRange)
+        UpdateInfo(); // Mise à jour des informations nécessaires à la prise de décision
+
+        // Arbre de décision pour la gestion des états
+        if (distanceToTarget <= meleeRange && isTargetVisible)
         {
-            // Vérifie si l'ennemi peut attaquer (cooldown terminé)
-            if (attackTimer <= 0f)
+            // Si la cible est à portée de mêlée et visible, passer à l'état d'attaque de mêlée
+            currentState = State.MeleeAttack;
+        }
+        else
+        {
+            // Sinon, rester en état Idle
+            currentState = State.Idle;
+        }
+
+        // Appeler la méthode correspondant à l'état actuel
+        switch (currentState)
+        {
+            case State.Idle:
+                HandleIdleState();
+                break;
+
+            case State.MeleeAttack:
+                HandleMeleeAttackState();
+                break;
+        }
+    }
+
+    private void UpdateInfo()
+    {
+        // Calcul de la distance à la cible
+        distanceToTarget = Vector2.Distance(transform.position, target.position);
+
+        // Vérification de la visibilité de la cible avec un raycast
+        Vector2 directionToTarget = target.position - transform.position;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToTarget, distanceToTarget, obstacleLayer);
+
+        // Si le raycast ne touche rien, la cible est visible
+        isTargetVisible = hit.collider == null;
+    }
+
+    private void HandleIdleState()
+    {
+        // Annuler la vélocité
+        rb.velocity = Vector2.zero;
+
+        float idleWaitTime = distanceToTarget <= closeDistanceThreshold ? idleWaitTimeClose : idleWaitTimeFar;
+
+        StartCoroutine(IdleCoroutine(idleWaitTime));
+    }
+
+    private IEnumerator IdleCoroutine(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+
+        // Après l'attente, repasser à l'évaluation de l'état
+        StateManager();
+    }
+
+    private void HandleMeleeAttackState()
+    {
+        // Vérifier si le cooldown est terminé avant de pouvoir attaquer
+        StartCoroutine(MeleeAttackCoroutine());
+    }
+
+    private IEnumerator MeleeAttackCoroutine()
+    {
+        // Logique d'attaque de mêlée
+        Debug.Log("Attaque de mêlée exécutée!");
+
+        // Appliquer les dégâts à la cible
+        if (distanceToTarget <= meleeRange)
+        {
+            // Application des dégâts au joueur
+            IDamageable damageable = target.GetComponent<IDamageable>();
+            if (damageable != null)
             {
-                AttackPlayer();
-                attackTimer = attackCooldown; // Réinitialise le chronomètre de cooldown
+                damageable.TakeDamage((int)meleeDamage);
             }
         }
 
-        // Réduit le chronomètre de cooldown
-        if (attackTimer > 0f)
+        // Attendre avant de pouvoir attaquer à nouveau
+        yield return new WaitForSeconds(meleeAttackCooldown);
+
+        // Retourner à l'état Idle après l'attaque
+        currentState = State.Idle;
+        StateManager();
+    }
+
+    public void TakeDamage(int amount)
+    {
+        currentHealth -= amount;
+
+        if (currentHealth <= 0)
         {
-            attackTimer -= Time.deltaTime;
+            currentHealth = 0;
+            OnKilled?.Invoke(gameObject);
+            Destroy(gameObject);
         }
     }
 
-
-    /// <summary>
-    /// Attaquer le joueur
-    /// </summary>
-    private void AttackPlayer()
+    private void DestroyGameObject()
     {
-        // Récupère le script PlayerHealth attaché au joueur
-        PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
-
-        // Si le joueur a un script PlayerHealth, lui inflige des dégâts
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage(damageAmount);
-            Debug.Log("Le joueur a pris " + damageAmount + " dégât(s) de l'ennemi.");
-        }
+        Destroy(gameObject);
     }
 
-    public void FindPlayer()
+    private void OnDestroy()
     {
-        target = GameObject.FindGameObjectWithTag("Player");
-    }
-
-    IEnumerator UpdateEnemy()
-    {
-        while (true)
-        {
-            if (target != null)
-            {
-                float distanceToPlayer = Vector3.Distance(transform.position, target.transform.position);
-                if (distanceToPlayer <= detectionRange)
-                {
-                    Vector2 directionToPlayer = (target.transform.position - transform.position).normalized;
-                    RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToPlayer, detectionRange, layerMask);
-
-                    if (hit.collider != null && hit.collider.gameObject.CompareTag("Player"))
-                    {
-                        // Le raycast a touché le joueur, déplacer l'ennemi
-                        rb2D.velocity = directionToPlayer * moveSpeed;
-                    }
-                    else
-                    {
-                        // Le raycast n'a pas touché le joueur, arrêter l'ennemi
-                        rb2D.velocity = Vector2.zero;
-                    }
-                }
-                else
-                {
-                    // Le joueur est hors de portée, arrêter l'ennemi
-                    rb2D.velocity = Vector2.zero;
-                }
-            }
-            else
-            {
-                FindPlayer();
-            }
-
-            yield return new WaitForSeconds(updateInterval);
-        }
-    }
-
-
-    /* OnDestroy */
-
-    /// <summary>
-    /// Abonnée à l'evenement OnLevelEnded du LevelManager
-    /// </summary>
-    private void DestroyGameObject() { Destroy(gameObject); }
-
-    /// <summary>
-    /// Méthode appelée par Unity juste avant que l'objet ne soit détruit.
-    /// Déclenche l'événement OnDestroyed pour notifier les abonnés.
-    /// Se désabonne de l'évènement OnLevelEnded du LevelManager
-    /// </summary>
-    void OnDestroy()
-    {
-        // Désabonnement de la destruction lors de la fin du niveau
         LevelManager.OnLevelEnded -= DestroyGameObject;
-
     }
 }

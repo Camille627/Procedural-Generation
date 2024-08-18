@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement; // Pour recharger la scène en cas de mort du joueur, par exemple
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IDamageable
 {
     [SerializeField] private int maxHealth; // Vie maximale du joueur
     [SerializeField] private int currentHealth; // Vie actuelle du joueur
