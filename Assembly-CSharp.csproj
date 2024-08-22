@@ -74,6 +74,7 @@
     <Compile Include="Assets\Scripts\Entities\PlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Entities\WeaponContainer.cs" />
     <Compile Include="Assets\ScriptableObject\WeaponData.cs" />
+    <Compile Include="Assets\Scripts\Entities\EnemyWeaponManager.cs" />
     <Compile Include="Assets\Scripts\Entities\Medikit.cs" />
     <Compile Include="Assets\Scripts\Entities\EnemyController.cs" />
     <Compile Include="Assets\Scripts\Entities\ProjectileManager.cs" />

@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class WeaponManager : MonoBehaviour
+public class EnemyWeaponManager : MonoBehaviour
 {
-    [SerializeField] private WeaponData primaryWeapon; // Reference l'arme principale
-    [SerializeField] private WeaponData currentWeapon; // Reference l'arme acctuelle
+    [SerializeField] private WeaponData primaryWeapon; // Référence à l'arme principale
+    [SerializeField] private WeaponData currentWeapon; // Référence à l'arme actuelle
 
     [SerializeField] private int orderInLayer; // Order in layer du component Graphic de l'arme instanciée
     private float nextFireTime = 0f; // Temps avant de pouvoir tirer de nouveau
@@ -12,88 +12,82 @@ public class WeaponManager : MonoBehaviour
     private SpriteRenderer weaponGraphicSR;
     private Transform firePoint;
 
-    private Camera playerCamera; // Reference a la camera pour savoir dans quelle direction on vise
+    private void Awake()
+    {
+        EquipWeapon(primaryWeapon); // Équipe l'arme principale
+    }
 
     // get
     public WeaponData CurrentWeapon() { return currentWeapon; }
 
-    private void Start()
-    {
-        playerCamera = Camera.main;
-        EquipWeapon(primaryWeapon);
-    }
-
-    private void Update()
-    {
-        FaceMouse();
-
-        if (Input.GetKey(OptionsManager.fireKey)) { HandleShooting(); }
-    }
-
-    // Changement d'arme
-
+    /// <summary>
+    /// Équipe une nouvelle arme pour l'ennemi
+    /// </summary>
     public void EquipWeapon(WeaponData weapon)
     {
         currentWeapon = weapon;
         fireInterval = 60f / weapon.fireRate;
 
-        // Detruis l'instance d'arme actuelle
-        if (currentWeaponInstance != null) { Destroy(currentWeaponInstance.gameObject); }
+        // Détruit l'instance d'arme actuelle
+        if (currentWeaponInstance != null)
+        {
+            Destroy(currentWeaponInstance.gameObject);
+        }
 
-        // Instancier l'arme et récupérer la référence à l'instance créée
+        // Instancie l'arme et récupère la référence à l'instance créée
         GameObject weaponInstance = Instantiate(weapon.model, transform.position, Quaternion.identity, transform);
-        if (weaponInstance == null) { throw new System.Exception("Weapon instance could not be created."); }
+        if (weaponInstance == null)
+        {
+            throw new System.Exception("Weapon instance could not be created.");
+        }
         currentWeaponInstance = weaponInstance.transform;
-        
+
         weaponGraphicSR = weaponInstance.transform.Find("Graphic").GetComponent<SpriteRenderer>();
-        if (weaponGraphicSR == null) { throw new System.Exception("SpriteRenderer not found in the weapon instance."); }
+        if (weaponGraphicSR == null)
+        {
+            throw new System.Exception("SpriteRenderer not found in the weapon instance.");
+        }
 
         firePoint = weaponInstance.transform.Find("Graphic/FirePoint");
-        if (firePoint == null) { throw new System.Exception("FirePoint not found in the weapon instance."); }
+        if (firePoint == null)
+        {
+            throw new System.Exception("FirePoint not found in the weapon instance.");
+        }
 
         // Graphic Order in Layer
         weaponGraphicSR.sortingOrder = orderInLayer;
     }
 
-    // Visée
-
     /// <summary>
-    /// Oriente dans la direction de la souris
+    /// Oriente l'arme de l'ennemi vers une position donnée
     /// </summary>
-    private void FaceMouse()
+    public void AimAtPosition(Vector3 targetPosition)
     {
-        Vector3 direction = playerCamera.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+        Vector3 direction = targetPosition - transform.position;
         direction.z = 0; // Annule l'incidence de z
 
         currentWeaponInstance.right = direction;
-        if (direction.x > 0.01f) { weaponGraphicSR.flipY = false; }
-        else if (direction.x < -0.01f) { weaponGraphicSR.flipY = true; }
-        
-        // faire passer l'arme derrière le joueur quand il tire vers le haut.
-        //    if (direction.y > 0.1f) { spriteRenderer.sortingOrder = 9; }
-        //    else if (direction.y < -0.1f) { spriteRenderer.sortingOrder = 12; }
-    }
-    
-    // Tir
-    public void HandleShooting()
-    {
-        if (currentWeapon.isAutomatic)
+        if (direction.x > 0.01f)
         {
-            // Tir automatique
-            if (Input.GetKey(OptionsManager.fireKey) && Time.time >= nextFireTime)
-            {
-                Shoot();
-                nextFireTime = Time.time + fireInterval;
-            }
+            weaponGraphicSR.flipY = false;
         }
-        else
+        else if (direction.x < -0.01f)
         {
-            // Tir semi-automatique
-            if (Input.GetKeyDown(OptionsManager.fireKey) && Time.time >= nextFireTime)
-            {
-                Shoot();
-                nextFireTime = Time.time + fireInterval;
-            }
+            weaponGraphicSR.flipY = true;
+        }
+    }
+
+    /// <summary>
+    /// Gère le tir de l'ennemi vers une position donnée
+    /// </summary>
+    public void HandleShooting(Vector3 targetPosition)
+    {
+        AimAtPosition(targetPosition); // Oriente l'arme vers la position cible
+
+        if (Time.time >= nextFireTime)
+        {
+            Shoot();
+            nextFireTime = Time.time + fireInterval;
         }
     }
 
@@ -137,6 +131,5 @@ public class WeaponManager : MonoBehaviour
         // Applique une vélocité au projectile pour le faire se déplacer dans la direction définie
         projectile.GetComponent<Rigidbody2D>().velocity = direction * currentWeapon.projectileSpeed;
     }
-
 
 }

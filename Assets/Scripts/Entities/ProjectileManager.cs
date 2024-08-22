@@ -14,6 +14,12 @@ public class ProjectileManager : MonoBehaviour
 
     private void Start()
     {
+        // Assigner le Layer "Projectile" à ce projectile
+        gameObject.layer = LayerMask.NameToLayer("Projectile");
+
+        // Ignorer les collisions avec d'autres projectiles sur le même Layer
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Projectile"), LayerMask.NameToLayer("Projectile"));
+
         LevelManager.OnLevelEnded += DestroyObject;
         startPosition = transform.position;
 
@@ -32,23 +38,19 @@ public class ProjectileManager : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") == false)
+        // Récupération de l'objet touché
+        var hit = collision.gameObject;
+        var health = hit.GetComponent<IDamageable>();
+        if (health != null)
         {
-            // Récupération de l'objet touché
-            var hit = collision.gameObject;
-            var health = hit.GetComponent<IDamageable>();
-            if (health != null)
-            {
-                //Application des dégats
-                health.TakeDamage(damages);
-            }
-
-            Destroy(gameObject);
+            //Application des dégâts
+            health.TakeDamage(damages);
         }
+
+        Destroy(gameObject);
     }
 
     private void DestroyObject() { Destroy(gameObject); }
 
     private void OnDestroy() { LevelManager.OnLevelEnded -= DestroyObject; }
 }
-
