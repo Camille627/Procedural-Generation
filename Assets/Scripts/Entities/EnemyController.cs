@@ -20,7 +20,11 @@ public class EnemyController : MonoBehaviour, IDamageable
     public float chargeRange = 10f; // Portée minimale pour commencer à charger
 
     public float aimingTime = 1f; // Temps de visée
-    public float shootCooldown = 0.2f; // Temps de pause après l'action du tir
+    private float fireCooldown = 0f;   // Temps restant avant le prochain tir
+    public float fireCooldownDuration = 0.2f; // durée d'une pause après tir
+    private int shotsFiredInBurst = 0; // Compte le nombre de tirs dans une rafale (pour semi-automatic)
+    private float burstDuration = 2f;  // Durée de la rafale pour automatic
+    private bool isFiringBurst = false; // Indique si une rafale est en cours
 
     public Transform target; // Cible de l'ennemi (le joueur)
     public LayerMask obstacleLayer; // Masque de couche pour détecter les obstacles
@@ -47,7 +51,13 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     private void Start()
     {
-        InitializeEnemy();
+        //InitializeEnemy();
+    }
+
+    private void Update()
+    {
+        // Diminue le fireCooldown à chaque frame
+        //fireCooldown -= Time.deltaTime;
     }
 
     /// <summary>
@@ -230,34 +240,35 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     private IEnumerator AimCoroutine()
     {
-        float elapsedTime = 0f;
+        float elapsedTime = 0;
 
         // Boucle tant que l'ennemi est dans l'état "Aim"
-        while (currentState == State.Aim)
+        while (true)
         {
             UpdateInfo();
+            elapsedTime += Time.deltaTime;
 
             // Faire en sorte que l'ennemi vise la position actuelle de la cible
             weaponManager.AimAtPosition(target.position);
 
-            // Si les conditions pour tirer sont remplies, passer à l'état "Shoot"
-            if (isTargetVisible && distanceToTarget <= weaponManager.CurrentWeapon().range)
+            if (elapsedTime >= aimingTime)
             {
-                elapsedTime += Time.deltaTime;
-                if (elapsedTime >= aimingTime)
+                // Si les conditions pour tirer sont remplies, passer à l'état "Shoot"
+                if (isTargetVisible &&
+                    distanceToTarget <= weaponManager.CurrentWeapon().range)
                 {
                     currentState = State.Shoot; // Passer à l'état "Shoot" après avoir visé assez longtemps
                     HandleShootState();
                     yield break; // Quitter la coroutine une fois que l'état de tir est enclenché
                 }
+                else
+                {
+                    // Si les conditions ne sont plus remplies, recalculer l'état approprié
+                    StateManager();
+                    yield break; // Quitter la coroutine car l'état a changé
+                }
             }
-            else
-            {
-                // Si les conditions ne sont plus remplies, recalculer l'état approprié
-                StateManager();
-                yield break; // Quitter la coroutine car l'état a changé
-            }
-
+            
             yield return null; // Attendre la prochaine frame avant de réévaluer la situation
         }
     }
@@ -267,17 +278,53 @@ public class EnemyController : MonoBehaviour, IDamageable
     /// </summary>
     private void HandleShootState()
     {
-        StartCoroutine(ShootCoroutine());
+        if (fireCooldown <= 0f)
+        {
+            Debug.Log("tryshoot");
+            int isFireDone;
+            isFireDone = weaponManager.TryShootingAt(target.position);
+            if (isFireDone == 1) { StateManager(); return; }
+            WeaponData weapon = weaponManager.CurrentWeapon();
+
+            switch (weapon.reloadType)
+            {
+                case ReloadType.Manual:
+                    // Applique un cooldown après chaque tir
+                    fireCooldown = fireCooldownDuration;
+                    break;
+
+                case ReloadType.SemiAutomatic:
+                    shotsFiredInBurst++;
+
+                    // Si trois tirs ont été effectués, applique un cooldown
+                    if (shotsFiredInBurst >= 3)
+                    {
+                        shotsFiredInBurst = 0;  // Réinitialise le compteur de tirs
+                        fireCooldown = fireCooldownDuration;
+                    }
+                    break;
+
+                case ReloadType.Automatic:
+                    // Si la rafale n'est pas déjà en cours, démarrez-la
+                    if (!isFiringBurst)
+                    {
+                        StartCoroutine(StartAutomaticFireBurst());
+                    }
+                    break;
+            }
+        }
+
+        StateManager();
     }
 
-    private IEnumerator ShootCoroutine()
+    private IEnumerator StartAutomaticFireBurst()
     {
-        weaponManager.HandleShooting(target.position);
+        isFiringBurst = true;
+        yield return new WaitForSeconds(burstDuration);
 
-        yield return new WaitForSeconds(shootCooldown); // L'ennemi marque une pause après le tir
-
-        currentState = State.Idle; // Retour à l'état Idle après le tir
-        StateManager();
+        // Applique un cooldown après la rafale
+        fireCooldown = fireCooldownDuration;
+        isFiringBurst = false;
     }
 
     // --- Gestion des dégâts ---

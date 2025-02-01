@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: Fusil semi automatique
   damage: 2
-  isAutomatic: 0
+  reloadType: 1
   fireRate: 240
   range: 25
   projectileSpeed: 20

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: Revolver
   damage: 2
-  isAutomatic: 0
+  reloadType: 1
   fireRate: 180
   range: 15
   projectileSpeed: 15

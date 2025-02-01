@@ -77,7 +77,7 @@ public class WeaponManager : MonoBehaviour
     // Tir
     public void HandleShooting()
     {
-        if (currentWeapon.isAutomatic)
+        if (currentWeapon.reloadType == ReloadType.Automatic)
         {
             // Tir automatique
             if (Input.GetKey(OptionsManager.fireKey) && Time.time >= nextFireTime)
@@ -88,7 +88,7 @@ public class WeaponManager : MonoBehaviour
         }
         else
         {
-            // Tir semi-automatique
+            // Tir semi-automatique ou manuel
             if (Input.GetKeyDown(OptionsManager.fireKey) && Time.time >= nextFireTime)
             {
                 Shoot();
@@ -107,7 +107,7 @@ public class WeaponManager : MonoBehaviour
         // Vérifie que l'arme ne traverse pas un obstacle avant de tirer
         LayerMask layerMask = 1 << LayerMask.NameToLayer("Obstacles"); // Inclut uniquement les obstacles
         RaycastHit2D hit = Physics2D.Linecast(currentWeaponInstance.position, firePoint.position, layerMask);
-        if (hit.collider != null && hit.collider.CompareTag("Obstacle"))
+        if (hit.collider != null)
         {
             // Si un obstacle est détecté, le tir est annulé
             return;

@@ -78,18 +78,32 @@ public class EnemyWeaponManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Gère le tir de l'ennemi vers une position donnée
+    /// Tente de tirer sur la cible à une position donnée.
+    /// L'arme est orientée vers la position spécifiée, et si le cooldown du tir est écoulé,
+    /// le tir est effectué.
     /// </summary>
-    public void HandleShooting(Vector3 targetPosition)
+    /// <param name="targetPosition">La position de la cible vers laquelle l'ennemi tente de tirer.</param>
+    /// <returns>
+    /// Retourne un entier indiquant le résultat du tir :
+    /// 0 si le tir a réussi (le cooldown était écoulé et l'ennemi a tiré),
+    /// 1 si le tir a échoué (le cooldown n'était pas encore écoulé).
+    /// </returns>
+    public int TryShootingAt(Vector3 targetPosition)
     {
-        AimAtPosition(targetPosition); // Oriente l'arme vers la position cible
+        // Oriente l'arme vers la position cible
+        AimAtPosition(targetPosition);
 
+        // Vérifie si le cooldown du tir est écoulé
         if (Time.time >= nextFireTime)
         {
-            Shoot();
-            nextFireTime = Time.time + fireInterval;
+            Shoot(); // Effectue le tir
+            nextFireTime = Time.time + fireInterval; // Met à jour le temps du prochain tir
+            return 0; // Indique que le tir a réussi
         }
+
+        return 1; // Indique que le tir a échoué (cooldown non écoulé)
     }
+
 
     /// <summary>
     /// Tire un projectile dans la direction dans laquelle l'arme est actuellement orientée.

@@ -178,6 +178,8 @@ MonoBehaviour:
   meleeAttackCooldown: 1
   chargeSpeed: 5
   chargeRange: 5
+  aimingTime: 1
+  fireCooldownDuration: 0.5
   target: {fileID: 0}
   obstacleLayer:
     serializedVersion: 2

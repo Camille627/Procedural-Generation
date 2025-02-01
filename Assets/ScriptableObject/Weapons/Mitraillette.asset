@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: Mitraillette
   damage: 1
-  isAutomatic: 1
+  reloadType: 2
   fireRate: 480
   range: 15
   projectileSpeed: 15

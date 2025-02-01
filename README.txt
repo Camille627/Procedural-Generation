@@ -1,0 +1,1 @@
+There is a Git initialized in this folder. Use git log to see more

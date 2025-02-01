@@ -467,6 +467,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4062635074327007851, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6007554552944041621, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6089428722423628491, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.347
@@ -508,9 +516,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7362722519114475897, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7362722519114475897, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
       propertyPath: primaryWeapon
       value: 
       objectReference: {fileID: 11400000, guid: ac11768be7f8ff848b4fb9f3e6d6d9c9, type: 2}
+    - target: {fileID: 7698909472011406565, guid: bdd412c65dc7a0e489eec0a4fa02ca59, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

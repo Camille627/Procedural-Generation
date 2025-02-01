@@ -34,10 +34,10 @@ public class LevelManager : MonoBehaviour
     private void Start()
     {
         random = new Random(seed);
-        player = GameObject.FindGameObjectWithTag("Player"); ; // Référence du joueur
+        //player = GameObject.FindGameObjectWithTag("Player"); ; // Référence du joueur
 
         // Initialisation et génération du niveau
-        SetLevel();
+        //SetLevel();
     }
 
     /// <summary>
