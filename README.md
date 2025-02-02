@@ -1,30 +1,51 @@
-# 🎯 [Nom du Projet] - Jeu de Tir 2D avec Génération Procédurale
+# 🎯 [1917] - Roguelike avec Génération Procédurale
 
-🚀 Un jeu de tir en 2D où les niveaux sont **générés de manière procédurale** en utilisant la **théorie des graphes**, des **oscillations sinusoïdales** pour les couloirs, et une **répartition intelligente des entités**.  
-L'objectif est de créer des environnements variés et immersifs, inspirés de **techniques issues de la synthèse musicale**.  
+🚀 Un jeu de tir en 2D où les niveaux sont **générés de manière procédurale** en utilisant la **théorie des graphes**.
 
 ---
 
 ## 🌍 Génération Procédurale - Principe
 
-Notre système de génération de niveaux repose sur **trois étapes clés** :
+Notre système de génération de niveaux repose sur **trois étapes** :
 
 ### **1️⃣ Génération d'un graphe**
-🔹 Un **graphe** est d'abord créé pour structurer les connexions entre différentes zones du niveau.  
-🔹 **Avantage :** En utilisant la **théorie des graphes**, on garantit que le joueur **n'a pas à repasser deux fois par le même couloir** pour explorer toute la carte.  
-🔹 **Actuellement, notre implémentation génère un graphe linéaire**.
+Un **graphe** est d'abord créé pour structurer le niveau. En utilisant la **théorie des graphes**, on garantit que le joueur **n'a pas à repasser deux fois par le même couloir** pour explorer toute la carte. Pour cela, le graphe doit être *eulérien* et *planaire* (sinon les arrêtes se croisent).
 
-📌 **Prochaine amélioration :** Générer des graphes plus novateurs avec des **cycles, des structures semi-eulériennes et eulériennes**, pour offrir plus de variété et de choix au joueur.  
+🔹 Actuellement, notre implémentation génère un graphe *linéaire*.
 
-### **2️⃣ Tracé aléatoire des couloirs avec oscillations sinusoïdales**
-Nous avons travaillé sur un tracé **plus naturel et fluide des couloirs**, en nous inspirant de techniques issues de la **synthèse sonore en musique** :
+
+📌 **Prochaine amélioration :** Générer des graphes plus novateurs : des *cycles*, des graphes *semi-eulériens* et *eulériens* (non linéaires)
+
+### **2️⃣ Tracé des couloirs et des salles**
+On remplace ensuite chaque arrête du graphe par un **couloir** et chaque noeud par une **salle**.
+Nous avons travaillé sur un tracé plus naturel et fluide des couloirs, en nous inspirant de la **synthèse additive** :
+
+ 🔹 On modélise une droite entre les **salles** à lier puis on lui ajoute une sucession de perturbations dont l'amplitude maximale diminue à chaque itération.
+ 
+ 🔹 Les perturbations sont des courbes sinusoïdales de fréquent divisée par 2 à chaque itération. 
+ 
+ 🔹 Attribue à chaque perturbation un modificateur d'amplitude aléatoire dans l'intervalle [1;-1] qui est facteur de l'amplitude maximale de la perturbation. C'est cela qui rend aléatoire le tracé.
 
 📌 **Prochaine amélioration :** Générer des **salles plus complexes** (circulaires, rectangulaires, formes plus aléatoires) pour diversifier les environnements.  
 
 ### **3️⃣ Placement des entités dans le niveau**
-Une fois la structure du niveau définie, nous plaçons dynamiquement les **éléments interactifs** :
+Une fois la structure du niveau définie, nous ajoutons dans les **salles** les **entitées** :
 
-📌 **Prochaine amélioration :** Positionner les **entités et bonus de manière plus réaliste**, en tenant compte de la disposition des salles et du gameplay.  
+📌 **Prochaine amélioration :** Positionner les **entités et bonus de manière plus réaliste**, en tenant compte de la disposition des salles.  
+
+---
+
+## 🧰 Mechaniques du jeu
+### Les armes
+Les armes ont 5 caractéristiques : cadence, portée, mode de tir (auto ou semi-auto), vitesse du projectile et dégats.
+Le **Revolver** est l'arme, par défault, équipée sur le joueur. La **Mitraillette**, le **Fusil semi-automatique** et le **Fusil à verrou** peuvent être récupérés dans une **caisse d'arme**
+
+### Les caisses
+Lorsque vous marchez sur une **caisse d'arme**, vous échangez votre arme avec celle qu'elle contient. La **caisse de soin** vous restaurera 1 **point de vie** si vous en avez besoin.
+Il y a une caisse de chaque exemplaire par niveau ✅.
+
+### Gagner 🏁
+Vous avez terminé un niveau lorsque tous les ennemis ont été tués. Un nouveau niveau se recharge alors.
 
 ---
 
@@ -45,15 +66,15 @@ Une fois la structure du niveau définie, nous plaçons dynamiquement les **él�
 
 | Action          | Touche par défaut |
 |----------------|-----------------|
-| **Se déplacer** | `Z / Q / S / D` (ou `W / A / S / D` en QWERTY) |
+| **Se déplacer** | `Z / Q / S / D` |
 | **Viser**      | `Shift gauche` |
 | **Tirer**      | `Clic gauche` |
-| **Changer d'arme** | `E` |
-| **Ramasser un objet** | `F` |
-| **Recharger**  | `R` |
-| **Pause/Menu** | `Échap` |
+| **Quitter** | `Échap` |
 | **Activer un cheat code** | `\` |
-| **Régénérer le niveau** | `G + E + N` |
+| **Regénérer le niveau** | `G + E + N` |
+
+Pour utiliser un cheat code, il faut presser la touche **Activer un cheat code** en plus de celles du cheat code.
+Je n'ai pas réussi à regénérer le niveau lors de mes dernier tests (dans l'éditeur comme dans la version compilée)
 
 ---
 
@@ -62,27 +83,3 @@ Une fois la structure du niveau définie, nous plaçons dynamiquement les **él�
 ❌ **Le niveau ne se recharge pas dans le build final ?**  
 **Problème :** Lorsqu'on tue le dernier ennemi, le niveau ne se recharge pas.  
 **Cause possible :** La coroutine `EndLevel()` est peut-être interrompue ou `SetLevel()` ne se déclenche pas correctement.  
-
-### **✅ Solution temporaire**
-Ajoutez un **rechargement manuel de la scène** dans `EndLevel()` :
-
-```csharp
-using UnityEngine.SceneManagement;
-
-public void EndLevel()
-{
-    Debug.Log("EndLevel() started.");
-    OnLevelEnded?.Invoke();
-
-    if (player != null)
-    {
-        player.GetComponent<PlayerHealth>().OnDeath -= OnPlayerDeath;
-    }
-
-    isPlaying = false;
-    TilemapUtils.ClearTilemaps(tilemaps);
-    activeEnemies.Clear();
-
-    Debug.Log("Reloading scene...");
-    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-}
