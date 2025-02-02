@@ -83,3 +83,12 @@ Je n'ai pas réussi à regénérer le niveau lors de mes dernier tests (dans l'�
 ❌ **Le niveau ne se recharge pas dans le build final ?**  
 **Problème :** Lorsqu'on tue le dernier ennemi, le niveau ne se recharge pas.  
 **Cause possible :** La coroutine `EndLevel()` est peut-être interrompue ou `SetLevel()` ne se déclenche pas correctement.  
+
+
+---
+
+# 📫 Suggestions et signalements de bugs
+Si vous avez des idées d'amélioration ou que vous trouvez un bug n'hésitez pas à m'en faire part 😉.
+
+# 📜 Licence
+⚠️ Ce projet est sous licence MIT. Vous êtes libre de l'utiliser et de le modifier, mais veuillez créditer l'auteur original.
