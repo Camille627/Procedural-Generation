@@ -1,4 +1,4 @@
-# 🎯 [1917] - Roguelike avec Génération Procédurale
+# 🎯 Roguelike avec Génération Procédurale
 
 🚀 Un jeu de tir en 2D où les niveaux sont **générés de manière procédurale** en utilisant la **théorie des graphes**.
 
@@ -42,7 +42,7 @@ Le **Revolver** est l'arme, par défault, équipée sur le joueur. La **Mitraill
 
 ### Les caisses
 Lorsque vous marchez sur une **caisse d'arme**, vous échangez votre arme avec celle qu'elle contient. La **caisse de soin** vous restaurera 1 **point de vie** si vous en avez besoin.
-Il y a une caisse de chaque exemplaire par niveau ✅.
+Il y a une caisse de chaque exemplaire par niveau .
 
 ### Gagner 🏁
 Vous avez terminé un niveau lorsque tous les ennemis ont été tués. Un nouveau niveau se recharge alors.
@@ -51,7 +51,7 @@ Vous avez terminé un niveau lorsque tous les ennemis ont été tués. Un nouvea
 
 ## 🕹️ Essayer le jeu sans installer Unity
 
-🎮 Vous pouvez tester le jeu sans avoir besoin d'installer Unity !  
+Vous pouvez tester le jeu sans avoir besoin d'installer Unity !  
 
 ### **1️⃣ Télécharger la version compilée**
 - Le dossier `build/` contient la version compilée du jeu (`a3112b4`).  
@@ -62,7 +62,7 @@ Vous avez terminé un niveau lorsque tous les ennemis ont été tués. Un nouvea
 
 ---
 
-## 🕹️ Résumé des commandes du jeu
+## 🎮 Résumé des commandes du jeu
 
 | Action          | Touche par défaut |
 |----------------|-----------------|
@@ -78,11 +78,10 @@ Je n'ai pas réussi à regénérer le niveau lors de mes dernier tests (dans l'�
 
 ---
 
-## ❓ Problèmes connus
+## Problèmes connus
 
 ❌ **Le niveau ne se recharge pas dans le build final ?**  
-**Problème :** Lorsqu'on tue le dernier ennemi, le niveau ne se recharge pas.  
-**Cause possible :** La coroutine `EndLevel()` est peut-être interrompue ou `SetLevel()` ne se déclenche pas correctement.  
+**Problème :** Lorsqu'on tue le dernier ennemi, le niveau ne se recharge pas. 
 
 
 ---
@@ -90,5 +89,5 @@ Je n'ai pas réussi à regénérer le niveau lors de mes dernier tests (dans l'�
 # 📫 Suggestions et signalements de bugs
 Si vous avez des idées d'amélioration ou que vous trouvez un bug n'hésitez pas à m'en faire part 😉.
 
-# 📜 Licence
-⚠️ Ce projet est sous licence MIT. Vous êtes libre de l'utiliser et de le modifier, mais veuillez créditer l'auteur original.
+# Licence
+Ce projet est sous licence MIT. Vous êtes libre de l'utiliser et de le modifier, mais veuillez créditer l'auteur original.
