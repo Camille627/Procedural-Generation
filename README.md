@@ -1,4 +1,4 @@
-# 🎯 [1917] - Roguelike with Procedural Generation
+# 🎯 Roguelike with Procedural Generation
 
 🚀 A 2D shooter game where levels are **procedurally generated** using **graph theory**.
 
@@ -50,7 +50,7 @@ You complete a level when all enemies have been eliminated. A new level then loa
 
 ## 🕹️ Try the Game Without Installing Unity
 
-🎮 You can test the game without needing to install Unity!
+You can test the game without needing to install Unity!
 
 ### **1️⃣ Download the Compiled Version**
 - The `build/` folder contains the compiled version of the game (`a3112b4`).
@@ -61,7 +61,7 @@ You complete a level when all enemies have been eliminated. A new level then loa
 
 ---
 
-## 🕹️ Game Controls Summary
+## 🎮 Game Controls Summary
 
 | Action          | Default Key |
 |----------------|------------|
@@ -77,17 +77,16 @@ I was unable to regenerate the level during my last tests (both in the editor an
 
 ---
 
-## ❓ Known Issues
+## Known Issues
 
 ❌ **The level does not reload in the final build?**  
-**Issue:** When the last enemy is killed, the level does not reload.  
-**Possible Cause:** The `EndLevel()` coroutine may be interrupted, or `SetLevel()` may not be triggering correctly.
+**Issue:** When the last enemy is killed, the level does not reload.
 
 ---
 
-# 📫 Suggestions and Bug Reports
+# Suggestions and Bug Reports
 If you have improvement ideas or find a bug, feel free to share them with me 😉.
 
-# 📜 License
-⚠️ This project is under the MIT license. You are free to use and modify it, but please credit the original author.
+# License
+This project is under the MIT license. You are free to use and modify it, but please credit the original author.
 
