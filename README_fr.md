@@ -44,7 +44,7 @@ Le **Revolver** est l'arme, par défault, équipée sur le joueur. La **Mitraill
 Lorsque vous marchez sur une **caisse d'arme**, vous échangez votre arme avec celle qu'elle contient. La **caisse de soin** vous restaurera 1 **point de vie** si vous en avez besoin.
 Il y a une caisse de chaque exemplaire par niveau .
 
-### Gagner 🏁
+### Victoire 🏁
 Vous avez terminé un niveau lorsque tous les ennemis ont été tués. Un nouveau niveau se recharge alors.
 
 ---
