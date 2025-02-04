@@ -41,9 +41,9 @@ The **Revolver** is the default weapon equipped by the player. The **Submachine 
 
 ### Crates
 When stepping on a **weapon crate**, you swap your weapon with the one inside. The **health crate** restores 1 **health point** if needed.
-There is one of each type of crate per level ✅.
+There is one of each type of crate per level.
 
-### Winning 🏁
+### Victory 🏁
 You complete a level when all enemies have been eliminated. A new level then loads.
 
 ---
